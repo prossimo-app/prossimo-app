@@ -1,0 +1,72 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Cache
+.cache/
+.data/
+.pnpm-store/
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Testing
+coverage
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
+.next/
+out/
+build
+dist
+web-build/
+
+
+# Debug
+npm-debug.log*
+npm-debug.*
+yarn-debug.log*
+yarn-debug.*
+yarn-error.log*
+yarn-error.*
+
+# Misc
+.DS_Store
+*.pem
+
+# Expo
+apps/mobile/.expo/
+apps/mobile/expo-env.d.ts
+
+# Native
+apps/mobile/.kotlin/
+apps/mobile/**/*.orig.*
+apps/mobile/**/*.jks
+apps/mobile/**/*.p8
+apps/mobile/**/*.p12
+apps/mobile/**/*.key
+apps/mobile/**/*.mobileprovision
+apps/mobile/ios/
+apps/mobile/android/
+
+# Metro
+apps/mobile/.metro-health-check*
+
+# TypeScript
+*.tsbuildinfo
+
+# Mobile examples
+apps/mobile/example

@@ -1,0 +1,1 @@
+-- Initial empty migration. Add tables to src/schema.ts and run pnpm db:generate.

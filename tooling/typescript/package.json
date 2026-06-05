@@ -1,0 +1,7 @@
+{
+	"name": "@prossimo-app/tsconfig",
+	"private": true,
+	"files": [
+		"*.json"
+	]
+}

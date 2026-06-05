@@ -1,0 +1,54 @@
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        ".cache/tsbuildinfo.json",
+        "dist/**"
+      ]
+    },
+    "dev": {
+      "dependsOn": ["^dev"],
+      "cache": false,
+      "persistent": true
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": [".cache/tsbuildinfo.json"]
+    },
+    "lint": {
+      "outputs": [".cache/.eslintcache"]
+    },
+    "clean": {
+      "cache": false
+    }
+  },
+  "globalEnv": [
+    "API_CORS_ORIGIN",
+    "APP_ENV",
+    "APP_VARIANT",
+    "APP_STORE_DOWNLOAD_URL",
+    "DATABASE_URL",
+    "DEV_POSTGRES_DATA_DIR",
+    "DEV_POSTGRES_HOST_PORT",
+    "EXPO_PUBLIC_API_URL",
+    "EXPO_PUBLIC_WS_URL",
+    "GTFS_REALTIME_ALERT_RETENTION_DAYS",
+    "GOOGLE_PLAY_DOWNLOAD_URL",
+    "HOST",
+    "NODE_ENV",
+    "PORT",
+    "UPSTASH_REDIS_REST_TOKEN",
+    "UPSTASH_REDIS_REST_URL",
+    "WORKER_API_TOKEN",
+    "WORKER_ENV",
+    "WS_PORT",
+    "GOOGLE_MAPS_API_KEY"
+  ],
+  "globalPassThroughEnv": ["CI", "npm_lifecycle_event"]
+}

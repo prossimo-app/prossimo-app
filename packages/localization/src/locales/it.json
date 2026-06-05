@@ -1,0 +1,270 @@
+{
+  "web": {
+    "downloadButton": "Scarica l'app",
+    "hero": {
+      "legalDisclaimer": "Prossimo non è affiliato a GTT",
+      "title": "Controlla le fermate vicine, segui il tuo bus o tram e scopri esattamente quando partire",
+      "subtitle": "Prossimo è il tuo compagno per Torino. Vedi le fermate vicine, segui il tuo bus o tram e ricevi aggiornamenti in tempo reale su quando partire.",
+      "imageAlt": "Prossimo web hero preview"
+    },
+    "features": {
+      "title": "Tutto quello che serve prima della prossima corsa",
+      "subtitle": "Strumenti semplici per trovare una fermata, controllare gli arrivi e tenere vicine le linee abituali.",
+      "nearbyStops": {
+        "title": "Fermate vicine a colpo d'occhio",
+        "body": "Apri l'app e vedi le fermate intorno a te senza cercare in tutta la rete.",
+        "imageAlt": "Schermata delle fermate vicine di Prossimo"
+      },
+      "liveArrivals": {
+        "title": "Arrivi in tempo reale",
+        "body": "Scopri se il prossimo bus o tram sta arrivando, e in ritardo o resta in orario.",
+        "imageAlt": "Schermata degli arrivi in tempo reale di Prossimo"
+      },
+      "savedLines": {
+        "title": "Le tue linee abituali",
+        "body": "Tieni facili da trovare i percorsi che usi piu spesso quando sei in movimento.",
+        "imageAlt": "Schermata del dettaglio linea di Prossimo"
+      },
+      "clearSearch": {
+        "title": "Cerca fermate e linee",
+        "body": "Trova una fermata, un codice, un numero di linea o una destinazione da una sola ricerca.",
+        "imageAlt": "Schermata di ricerca linee di Prossimo"
+      }
+    },
+    "faq": {
+      "title": "Domande prima di partire",
+      "subtitle": "Qualche dettaglio su copertura, dati live e funzionamento di Prossimo.",
+      "coverage": {
+        "question": "Dove funziona Prossimo?",
+        "answer": "Prossimo e pensato per Torino e per la rete di trasporto pubblico locale, inclusi bus e tram."
+      },
+      "realtime": {
+        "question": "Gli arrivi sono in tempo reale?",
+        "answer": "Quando i dati live sono disponibili, Prossimo mostra gli arrivi in tempo reale e mantiene chiari gli orari programmati quando gli aggiornamenti live non sono presenti."
+      },
+      "location": {
+        "question": "Devo condividere la posizione?",
+        "answer": "La condivisione della posizione e facoltativa. Aiuta Prossimo a mostrare piu velocemente le fermate vicine, ma puoi comunque cercare a mano."
+      },
+      "price": {
+        "question": "Prossimo e gratis?",
+        "answer": "Si. Puoi scaricare l'app e usare gratis le funzioni principali per il trasporto."
+      }
+    },
+    "cta": {
+      "title": "Pronto per la prossima corsa?",
+      "subtitle": "Scarica Prossimo e tieni il trasporto di Torino a portata di mano quando esci."
+    },
+    "footer": {
+      "links": "Link",
+      "features": "Funzioni",
+      "faq": "FAQ",
+      "download": "Scarica"
+    }
+  },
+  "home": {
+    "title": "Benvenuto in Prossimo",
+    "subtitle": "Questo testo arriva dal pacchetto di localizzazione condiviso.",
+    "toolbar": {
+      "news": "Novita",
+      "settings": "Impostazioni"
+    },
+    "map": {
+      "zoomWarning": "Ingrandisci la mappa per vedere le fermate vicine.",
+      "clusterTitle": "{{count}} fermate",
+      "unavailable": "Le mappe sono disponibili solo su Android e iOS."
+    },
+    "drawer": {
+      "collapseAccessibilityLabel": "Comprimi pannello",
+      "expandAccessibilityLabel": "Espandi pannello",
+      "backAccessibilityLabel": "Torna indietro",
+      "closeAccessibilityLabel": "Chiudi",
+      "searchTitle": "Trova il tuo trasporto",
+      "searchSubtitle": "Trova una fermata o una linea nella rete.",
+      "globalSearch": "Cerca fermate o linee",
+      "stops": "Fermate",
+      "nearbyStops": "Fermate vicine",
+      "nearbyRadius": "entro {{distance}}",
+      "searchResults": "Risultati ricerca",
+      "noNearbyStops": "Nessuna fermata vicina",
+      "noNearbyStopsDescription": "Attiva la condivisione della posizione per vedere le fermate intorno a te, oppure cerca una fermata.",
+      "locationTutorialAction": "Scopri come fare",
+      "noMatchingStops": "Nessuna fermata corrispondente",
+      "noMatchingStopsDescription": "Prova con il nome della fermata, il codice fermata o il numero della linea.",
+      "stop": "Fermata",
+      "stopRoutes": "Linee {{routes}}",
+      "lines": "Linee",
+      "linesDescription": "Le linee sono in ordine alfabetico. Caricane altre per continuare.",
+      "matchingLinesDescription": "Linee corrispondenti alla ricerca.",
+      "searchLines": "Cerca linee",
+      "loadMoreLines": "Carica altre",
+      "noLines": "Nessuna linea",
+      "noLinesDescription": "Le linee appariranno qui quando i dati del trasporto saranno disponibili.",
+      "noMatchingLines": "Nessuna linea corrispondente",
+      "noMatchingLinesDescription": "Prova con il numero della linea, il nome del percorso o la destinazione.",
+      "lineTypes": {
+        "bus": "Bus",
+        "metro": "Metro",
+        "rail": "Treno",
+        "tram": "Tram",
+        "unknown": "Linea di trasporto"
+      },
+      "arrivals": {
+        "due": "Ora",
+        "empty": "Nessun arrivo in arrivo al momento.",
+        "hours": "{{count}} h",
+        "hoursMinutes": "{{hours}} h {{minutes}} min",
+        "live": "Arrivo live",
+        "liveLegend": "Gli arrivi live usano questo colore di sfondo.",
+        "line": "Linea {{line}}",
+        "minutes": "{{count}} min",
+        "noMatchingLines": "Nessuna linea corrispondente.",
+        "pendingRealtimeData": "Le informazioni live arriveranno a breve.",
+        "searchLines": "Cerca linee",
+        "scheduled": "Programmato",
+        "staleRealtimeData": "I dati live risalgono a oltre un minuto fa. Aggiornamento in corso.",
+        "stopCode": "Fermata {{code}}",
+        "updatedAt": "Ultimo aggiornamento alle {{time}}",
+        "toward": "Verso {{destination}}"
+      }
+    }
+  },
+  "news": {
+    "title": "Novita",
+    "sections": {
+      "recent": "Novita recenti"
+    },
+    "alerts": {
+      "noDescription": "Avviso di servizio"
+    },
+    "loading": {
+      "title": "Caricamento",
+      "description": "Controllo degli avvisi di servizio in corso."
+    },
+    "empty": {
+      "title": "Nessuna novita",
+      "description": "Gli aggiornamenti recenti appariranno qui."
+    }
+  },
+  "onboarding": {
+    "title": "Il trasporto di Torino, in tempo reale",
+    "subtitle": "Controlla le fermate vicine, segui il tuo bus o tram e scopri esattamente quando partire",
+    "primaryAction": "Inizia",
+    "imageAlt": "Anteprima onboarding di Prossimo",
+    "transport": {
+      "title": "I tuoi trasporti",
+      "searchPlaceholder": "Cerca i tuoi trasporti preferiti",
+      "nextAction": "Avanti",
+      "skipAction": "Salta"
+    },
+    "location": {
+      "title": "Ci serve l'accesso alla posizione",
+      "subtitle": "Prossimo usa la tua posizione per trovare le fermate piu vicine e mostrarti i trasporti intorno a te.",
+      "primaryAction": "Ho capito",
+      "imageAlt": "Illustrazione dell'accesso alla posizione"
+    }
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "version": "Versione {{version}}",
+    "sections": {
+      "preferences": "Preferenze",
+      "privacy": "Privacy",
+      "legal": "Legale"
+    },
+    "mapLimit": {
+      "label": "Mantieni la camera dentro Torino",
+      "accessibilityLabel": "Limite mappa",
+      "toasts": {
+        "turnedOffTitle": "Limite camera Torino disattivato",
+        "cannotTurnOnTitle": "Limite camera Torino non disponibile",
+        "outsideTurinDescription": "La tua posizione attuale e fuori Torino.",
+        "locationUnavailableDescription": "Non e stato possibile controllare la tua posizione attuale."
+      }
+    },
+    "theme": {
+      "title": "Tema",
+      "label": "Tema",
+      "accessibilityLabel": "Tema",
+      "options": {
+        "system": "Sistema",
+        "dark": "Scuro",
+        "light": "Chiaro"
+      }
+    },
+    "language": {
+      "label": "Lingua",
+      "accessibilityLabel": "Lingua"
+    },
+    "appUsage": {
+      "title": "Tracciamento dell'attività",
+      "label": "Tracciamento dell'attività",
+      "accessibilityLabel": "Tracciamento dell'attività",
+      "status": {
+        "shared": "Tracciamento dell'attività attivo",
+        "disabled": "Tracciamento dell'attività disattivato"
+      },
+      "detail": {
+        "description": "Gestito nelle impostazioni del dispositivo. Quando consentito, Prossimo puo usare segnali di attivita nell'app per migliorare l'esperienza.",
+        "currentOptionTitle": "Opzione attuale",
+        "settingsAction": "Apri Impostazioni"
+      },
+      "options": {
+        "loading": "Caricamento",
+        "notAllowed": "Non consentito",
+        "askNextTime": "Chiedi la prossima volta",
+        "allowed": "Consentito"
+      },
+      "steps": {
+        "appSettings": "Apri le impostazioni di Prossimo",
+        "allowTracking": "Attiva Consenti tracciamento"
+      }
+    },
+    "locationSharing": {
+      "title": "Condivisione posizione",
+      "label": "Condivisione posizione",
+      "accessibilityLabel": "Condivisione posizione",
+      "status": {
+        "shared": "Condivisione posizione attiva",
+        "disabled": "Condivisione posizione disattivata"
+      },
+      "detail": {
+        "description": "Gestita nelle impostazioni del dispositivo.",
+        "currentOptionTitle": "Opzione attuale",
+        "settingsAction": "Apri Impostazioni"
+      },
+      "options": {
+        "loading": "Caricamento",
+        "never": "Mai",
+        "askNextTime": "Chiedi la prossima volta",
+        "whileUsing": "Mentre usi l'app",
+        "always": "Sempre"
+      },
+      "steps": {
+        "appSettings": "Apri le impostazioni di Prossimo",
+        "locationSettings": "Tocca Posizione",
+        "locationOptions": "Scegli l'accesso"
+      }
+    },
+    "dataSources": {
+      "title": "Fonti dati",
+      "sourceName": "GTT S.p.A. – Gruppo Torinese Trasporti",
+      "sourceDescription": "I dati del trasporto sono presi dal feed GTFS real-time fornito da GTT S.p.A. – Gruppo Torinese Trasporti.",
+      "independentDisclaimer": "Prossimo e un'app indipendente e non e affiliata a GTT o 5T."
+    },
+    "legal": {
+      "privacyPolicy": "Informativa sulla privacy",
+      "privacyPolicyAccessibilityLabel": "Informativa sulla privacy",
+      "termsOfUse": "Termini di utilizzo",
+      "termsOfUseAccessibilityLabel": "Termini di utilizzo",
+      "dataSources": "Fonti dati",
+      "dataSourcesAccessibilityLabel": "Fonti dati"
+    },
+    "developerTools": {
+      "title": "Strumenti sviluppatore",
+      "resetOnboarding": "Reimposta onboarding",
+      "resetOnboardingDescription": "Mostra di nuovo l'onboarding per questo utente.",
+      "resetOnboardingAccessibilityLabel": "Reimposta onboarding"
+    }
+  }
+}

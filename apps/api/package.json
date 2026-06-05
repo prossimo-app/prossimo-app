@@ -1,0 +1,31 @@
+{
+  "name": "@prossimo-app/api-server",
+  "private": true,
+  "type": "module",
+  "main": "./dist/server.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm --filter @prossimo-app/api build && tsc",
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "dev": "pnpm --filter @prossimo-app/api build && dotenv -e ../../.env -- tsx watch src/server.ts",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint",
+    "start": "dotenv -e ../../.env -- node dist/server.js",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "dependencies": {
+    "@prossimo-app/api": "workspace:*",
+    "@trpc/server": "^11.0.0"
+  },
+  "devDependencies": {
+    "@prossimo-app/eslint-config": "workspace:*",
+    "@prossimo-app/prettier-config": "workspace:*",
+    "@prossimo-app/tsconfig": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "tsx": "^4.20.6",
+    "typescript": "catalog:"
+  },
+  "prettier": "@prossimo-app/prettier-config"
+}

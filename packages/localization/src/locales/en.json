@@ -1,0 +1,270 @@
+{
+  "web": {
+    "downloadButton": "Get the app",
+    "hero": {
+      "legalDisclaimer": "Prossimo is not affiliated with GTT",
+      "title": "Check nearby stops, follow your bus or tram, and know exactly when to leave",
+      "subtitle": "Prossimo is your companion for Turin. See nearby stops, track your bus or tram, and get real-time updates on when to leave.",
+      "imageAlt": "Prossimo web hero preview"
+    },
+    "features": {
+      "title": "Everything you need before the next ride",
+      "subtitle": "Simple tools for finding a stop, checking arrivals, and keeping your usual routes close.",
+      "nearbyStops": {
+        "title": "Nearby stops at a glance",
+        "body": "Open the app and see the stops around you without digging through the full network.",
+        "imageAlt": "Prossimo nearby stops screen"
+      },
+      "liveArrivals": {
+        "title": "Live arrivals",
+        "body": "Know whether the next bus or tram is arriving now, delayed, or still on schedule.",
+        "imageAlt": "Prossimo live arrivals screen"
+      },
+      "savedLines": {
+        "title": "Your usual lines",
+        "body": "Keep the routes you use most often easy to find when you are on the move.",
+        "imageAlt": "Prossimo line detail screen"
+      },
+      "clearSearch": {
+        "title": "Search across stops and lines",
+        "body": "Find a stop name, stop code, line number, or destination from one focused search.",
+        "imageAlt": "Prossimo search lines screen"
+      }
+    },
+    "faq": {
+      "title": "Questions before you ride",
+      "subtitle": "A few details about coverage, live data, and how Prossimo works.",
+      "coverage": {
+        "question": "Where does Prossimo work?",
+        "answer": "Prossimo is built for Turin and the local public transport network, including buses and trams."
+      },
+      "realtime": {
+        "question": "Are arrivals shown in real time?",
+        "answer": "When live data is available, Prossimo shows real-time arrivals and keeps scheduled times clear when live updates are not present."
+      },
+      "location": {
+        "question": "Do I need to share my location?",
+        "answer": "Location sharing is optional. It helps Prossimo show nearby stops faster, and you can still search manually without it."
+      },
+      "price": {
+        "question": "Is Prossimo free?",
+        "answer": "Yes. You can download the app and use the core transit features for free."
+      }
+    },
+    "cta": {
+      "title": "Ready for the next ride?",
+      "subtitle": "Download Prossimo and keep Turin transit close when you are out the door."
+    },
+    "footer": {
+      "links": "Links",
+      "features": "Features",
+      "faq": "FAQ",
+      "download": "Download"
+    }
+  },
+  "home": {
+    "title": "Welcome to Prossimo",
+    "subtitle": "This text comes from the shared localization package.",
+    "toolbar": {
+      "news": "News",
+      "settings": "Settings"
+    },
+    "map": {
+      "zoomWarning": "Zoom in to see nearby stops.",
+      "clusterTitle": "{{count}} stops",
+      "unavailable": "Maps are only available on Android and iOS."
+    },
+    "drawer": {
+      "collapseAccessibilityLabel": "Collapse drawer",
+      "expandAccessibilityLabel": "Expand drawer",
+      "backAccessibilityLabel": "Go back",
+      "closeAccessibilityLabel": "Close",
+      "searchTitle": "Find your transit",
+      "searchSubtitle": "Find a stop or line across the network.",
+      "globalSearch": "Search stops or lines",
+      "stops": "Stops",
+      "nearbyStops": "Nearby stops",
+      "nearbyRadius": "within {{distance}}",
+      "searchResults": "Search results",
+      "noNearbyStops": "No nearby stops",
+      "noNearbyStopsDescription": "Enable location sharing to see stops around you, or search for any stop.",
+      "locationTutorialAction": "See how it's done",
+      "noMatchingStops": "No matching stops",
+      "noMatchingStopsDescription": "Try a stop name, stop code, or line number.",
+      "stop": "Stop",
+      "stopRoutes": "Lines {{routes}}",
+      "lines": "Lines",
+      "linesDescription": "Lines are sorted alphabetically. Load more to keep browsing.",
+      "matchingLinesDescription": "Lines matching your search.",
+      "searchLines": "Search lines",
+      "loadMoreLines": "Load more",
+      "noLines": "No lines",
+      "noLinesDescription": "Lines will appear here when transit data is available.",
+      "noMatchingLines": "No matching lines",
+      "noMatchingLinesDescription": "Try a line number, route name, or destination.",
+      "lineTypes": {
+        "bus": "Bus",
+        "metro": "Metro",
+        "rail": "Rail",
+        "tram": "Tram",
+        "unknown": "Transit line"
+      },
+      "arrivals": {
+        "due": "Now",
+        "empty": "No incoming arrivals right now.",
+        "hours": "{{count}} hour",
+        "hoursMinutes": "{{hours}} hour {{minutes}} min",
+        "live": "Live arrival",
+        "liveLegend": "Live arrivals use this background color.",
+        "line": "Line {{line}}",
+        "minutes": "{{count}} min",
+        "noMatchingLines": "No matching lines.",
+        "pendingRealtimeData": "Live information will arrive shortly.",
+        "searchLines": "Search lines",
+        "scheduled": "Scheduled",
+        "staleRealtimeData": "Live data is over a minute old. Refreshing now.",
+        "stopCode": "Stop {{code}}",
+        "updatedAt": "Last updated at {{time}}",
+        "toward": "Toward {{destination}}"
+      }
+    }
+  },
+  "news": {
+    "title": "News",
+    "sections": {
+      "recent": "Recent news"
+    },
+    "alerts": {
+      "noDescription": "Service alert"
+    },
+    "loading": {
+      "title": "Loading",
+      "description": "Checking current service alerts."
+    },
+    "empty": {
+      "title": "No news",
+      "description": "Recent updates will appear here."
+    }
+  },
+  "onboarding": {
+    "title": "Turin transit, live",
+    "subtitle": "Check nearby stops, follow your bus or tram, and know exactly when to leave",
+    "primaryAction": "Get started",
+    "imageAlt": "Prossimo onboarding preview",
+    "transport": {
+      "title": "Your transport",
+      "searchPlaceholder": "Search your favorite transportation",
+      "nextAction": "Next",
+      "skipAction": "Skip"
+    },
+    "location": {
+      "title": "We need location access",
+      "subtitle": "Prossimo uses your location to find the nearest stops and show the transport options around you.",
+      "primaryAction": "I understand",
+      "imageAlt": "Location access illustration"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "version": "Version {{version}}",
+    "sections": {
+      "preferences": "Preferences",
+      "privacy": "Privacy",
+      "legal": "Legal"
+    },
+    "mapLimit": {
+      "label": "Keep the camera inside Turin",
+      "accessibilityLabel": "Map limit",
+      "toasts": {
+        "turnedOffTitle": "Turin camera limit turned off",
+        "cannotTurnOnTitle": "Turin camera limit unavailable",
+        "outsideTurinDescription": "Your current location is outside Turin.",
+        "locationUnavailableDescription": "Your current location could not be checked."
+      }
+    },
+    "theme": {
+      "title": "Theme",
+      "label": "Theme",
+      "accessibilityLabel": "Theme",
+      "options": {
+        "system": "System",
+        "dark": "Dark",
+        "light": "Light"
+      }
+    },
+    "language": {
+      "label": "Language",
+      "accessibilityLabel": "Language"
+    },
+    "appUsage": {
+      "title": "Activity tracking",
+      "label": "Activity tracking",
+      "accessibilityLabel": "Activity tracking",
+      "status": {
+        "shared": "Activity tracking is on",
+        "disabled": "Activity tracking is off"
+      },
+      "detail": {
+        "description": "Controlled in device settings. When allowed, Prossimo can use app activity signals to improve the experience.",
+        "currentOptionTitle": "Current option",
+        "settingsAction": "Open Settings"
+      },
+      "options": {
+        "loading": "Loading",
+        "notAllowed": "Not Allowed",
+        "askNextTime": "Ask Next Time",
+        "allowed": "Allowed"
+      },
+      "steps": {
+        "appSettings": "Open Prossimo settings",
+        "allowTracking": "Turn on Allow Tracking"
+      }
+    },
+    "locationSharing": {
+      "title": "Location sharing",
+      "label": "Location sharing",
+      "accessibilityLabel": "Location sharing",
+      "status": {
+        "shared": "Location sharing is on",
+        "disabled": "Location sharing is off"
+      },
+      "detail": {
+        "description": "Controlled in device settings.",
+        "currentOptionTitle": "Current option",
+        "settingsAction": "Open Settings"
+      },
+      "options": {
+        "loading": "Loading",
+        "never": "Never",
+        "askNextTime": "Ask Next Time",
+        "whileUsing": "While Using the App",
+        "always": "Always"
+      },
+      "steps": {
+        "appSettings": "Open Prossimo settings",
+        "locationSettings": "Tap Location",
+        "locationOptions": "Choose access"
+      }
+    },
+    "dataSources": {
+      "title": "Data sources",
+      "sourceName": "GTT S.p.A. – Gruppo Torinese Trasporti",
+      "sourceDescription": "Transit data is taken from the GTFS real-time feed provided by GTT S.p.A. – Gruppo Torinese Trasporti.",
+      "independentDisclaimer": "Prossimo is an independent app and is not affiliated with GTT or 5T."
+    },
+    "legal": {
+      "privacyPolicy": "Privacy Policy",
+      "privacyPolicyAccessibilityLabel": "Privacy Policy",
+      "termsOfUse": "Terms of Use",
+      "termsOfUseAccessibilityLabel": "Terms of Use",
+      "dataSources": "Data sources",
+      "dataSourcesAccessibilityLabel": "Data sources"
+    },
+    "developerTools": {
+      "title": "Developer tools",
+      "resetOnboarding": "Reset onboarding",
+      "resetOnboardingDescription": "Show onboarding again for this user.",
+      "resetOnboardingAccessibilityLabel": "Reset onboarding"
+    }
+  }
+}

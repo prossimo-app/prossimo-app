@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "@prossimo-app/tailwind-config/theme";
+@import "@c15t/nextjs/styles.css";
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: gray transparent;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), sans-serif;
+}

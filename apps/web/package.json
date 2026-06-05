@@ -1,0 +1,42 @@
+{
+  "name": "@prossimo-app/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "dotenv -e ../../.env -v NODE_ENV=production -- next build",
+    "clean": "git clean -xdf .cache .next .turbo node_modules",
+    "dev": "PORT=3030 pnpm with-env next dev",
+    "format": "prettier --check . --ignore-path ../../.gitignore",
+    "lint": "eslint --flag unstable_native_nodejs_ts_config",
+    "start": "pnpm with-env next start",
+    "typecheck": "tsc --noEmit",
+    "with-env": "dotenv -e ../../.env --"
+  },
+  "dependencies": {
+    "@base-ui/react": "^1.5.0",
+    "@c15t/nextjs": "^2.1.0",
+    "@prossimo-app/localization": "workspace:*",
+    "motion": "^12.40.0",
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@prossimo-app/api": "workspace:*",
+    "@prossimo-app/eslint-config": "workspace:*",
+    "@prossimo-app/prettier-config": "workspace:*",
+    "@prossimo-app/tailwind-config": "workspace:*",
+    "@prossimo-app/tsconfig": "workspace:*",
+    "@tailwindcss/postcss": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "1.0.0",
+    "eslint": "catalog:",
+    "eslint-config-next": "16.2.7",
+    "tailwindcss": "catalog:",
+    "typescript": "catalog:"
+  },
+  "prettier": "@prossimo-app/prettier-config"
+}
