@@ -14,7 +14,7 @@
   },
   "license": "MIT",
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm --filter @prossimo-app/redis build && tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
     "lint": "eslint",
@@ -24,7 +24,6 @@
     "@prossimo-app/db": "workspace:*",
     "@prossimo-app/redis": "workspace:*",
     "@trpc/server": "^11.0.0",
-    "@upstash/ratelimit": "^2.0.8",
     "superjson": "^2.2.6",
     "zod": "catalog:"
   },

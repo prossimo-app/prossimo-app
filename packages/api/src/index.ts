@@ -1,4 +1,8 @@
-export { createContext, createInnerContext } from "./context.js";
+export {
+  createContext,
+  createFetchContext,
+  createInnerContext,
+} from "./context.js";
 export {
   cacheAndPublishTopicPayload,
   cleanupInactiveObservedTopics,

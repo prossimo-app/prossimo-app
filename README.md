@@ -28,6 +28,7 @@ tooling/    Shared linting, formatting, TypeScript, and Tailwind configuration
 pnpm install
 cp .env.example .env
 pnpm db:dev:start
+pnpm redis:dev:start
 pnpm dev
 ```
 

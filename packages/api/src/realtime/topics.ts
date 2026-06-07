@@ -4,7 +4,10 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import type { RedisClient } from "@prossimo-app/redis";
-import { createRedisClientFromEnv } from "@prossimo-app/redis";
+import {
+  createRedisClientFromEnv,
+  isRedisConfiguredFromEnv,
+} from "@prossimo-app/redis";
 
 const ACTIVE_TOPICS_KEY = "rt:active_topics";
 const ACTIVE_TOPICS_LAST_SEEN_KEY = "rt:active_topics:last_seen";
@@ -59,10 +62,7 @@ export function getRealtimeRedisClient() {
     return redisClient;
   }
 
-  redisClient =
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-      ? createRedisClientFromEnv()
-      : null;
+  redisClient = isRedisConfiguredFromEnv() ? createRedisClientFromEnv() : null;
 
   return redisClient;
 }
@@ -344,8 +344,8 @@ export async function cleanupInactiveObservedTopics({
     const state = await redis.hgetall<Record<string, string>>(
       getTopicStateKey(topic),
     );
-    const subscriberCount = Number(state?.subscriber_count ?? 0);
-    const zeroSinceAt = state?.zero_since_at
+    const subscriberCount = Number(state.subscriber_count ?? 0);
+    const zeroSinceAt = state.zero_since_at
       ? Date.parse(state.zero_since_at)
       : null;
 
@@ -426,19 +426,15 @@ export function startRealtimeTopicUpdateSubscriber(
   }
 
   updateSubscriberStarted = true;
-  const subscriber = redis.subscribe(TOPIC_UPDATE_CHANNEL);
-
-  subscriber.on("message", (event) => {
-    const update = event.message as RealtimeTopicUpdate;
-
-    if (update.topic) {
-      emitTopicUpdate(update);
-    }
-  });
-
-  subscriber.on("error", (error) => {
-    console.warn("Redis realtime topic subscriber failed", error);
-  });
+  void redis
+    .subscribe<RealtimeTopicUpdate>(TOPIC_UPDATE_CHANNEL, (update) => {
+      if (update.topic) {
+        emitTopicUpdate(update);
+      }
+    })
+    .catch((error: unknown) => {
+      console.warn("Redis realtime topic subscriber failed", error);
+    });
 }
 
 export async function* observeTopic(topic: ObservedTopic, signal: AbortSignal) {

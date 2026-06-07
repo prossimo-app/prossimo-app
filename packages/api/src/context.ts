@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
 import type { CreateHTTPContextOptions } from "@trpc/server/adapters/standalone";
 
 import type { DbClient } from "@prossimo-app/db";
@@ -28,7 +29,7 @@ function getDbClient() {
   return db;
 }
 
-function getBearerToken(authorization: string | undefined) {
+function getBearerToken(authorization: string | null | undefined) {
   if (!authorization) {
     return null;
   }
@@ -44,6 +45,10 @@ function getBearerToken(authorization: string | undefined) {
 
 function getHeaderValue(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
+}
+
+function getFetchHeaderValue(headers: Headers, name: string) {
+  return headers.get(name) ?? undefined;
 }
 
 function getClientIp(req: CreateHTTPContextOptions["req"]) {
@@ -75,19 +80,53 @@ export function createInnerContext({
   };
 }
 
+function createContextFromHeaders({
+  authorization,
+  clientIp,
+  country,
+  userAgent,
+}: {
+  authorization?: string | null;
+  clientIp?: string | null;
+  country?: string | null;
+  userAgent?: string | null;
+}) {
+  return createInnerContext({
+    authToken: getBearerToken(authorization),
+    clientIp: clientIp?.split(",")[0]?.trim() ?? null,
+    country: country ?? null,
+    requestId: randomUUID(),
+    userAgent: userAgent ?? null,
+  });
+}
+
 export function createContext({ req }: CreateHTTPContextOptions) {
-  const authToken = getBearerToken(req.headers.authorization);
   const country =
     getHeaderValue(req.headers["x-vercel-ip-country"]) ??
-    getHeaderValue(req.headers["cf-ipcountry"]) ??
-    null;
-  const userAgent = getHeaderValue(req.headers["user-agent"]) ?? null;
+    getHeaderValue(req.headers["cf-ipcountry"]);
+  const userAgent = getHeaderValue(req.headers["user-agent"]);
 
-  return createInnerContext({
-    authToken,
+  return createContextFromHeaders({
+    authorization: req.headers.authorization,
     clientIp: getClientIp(req),
     country,
-    requestId: randomUUID(),
+    userAgent,
+  });
+}
+
+export function createFetchContext({ req }: FetchCreateContextFnOptions) {
+  const clientIp =
+    getFetchHeaderValue(req.headers, "x-forwarded-for") ??
+    getFetchHeaderValue(req.headers, "x-real-ip");
+  const country =
+    getFetchHeaderValue(req.headers, "x-vercel-ip-country") ??
+    getFetchHeaderValue(req.headers, "cf-ipcountry");
+  const userAgent = getFetchHeaderValue(req.headers, "user-agent");
+
+  return createContextFromHeaders({
+    authorization: req.headers.get("authorization"),
+    clientIp,
+    country,
     userAgent,
   });
 }

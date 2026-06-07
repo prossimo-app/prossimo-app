@@ -55,7 +55,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
       condition: (op) => op.type === "subscription",
       false: httpBatchLink({
         transformer: superjson,
-        url: `${getBaseUrl()}/trpc`,
+        url: `${getBaseUrl()}/api/trpc`,
         headers() {
           const headers = new Map<string, string>();
 

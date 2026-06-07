@@ -21,7 +21,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@upstash/redis": "^1.38.0"
+    "redis": "^6.0.0"
   },
   "devDependencies": {
     "@prossimo-app/eslint-config": "workspace:*",

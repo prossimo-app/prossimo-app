@@ -8,7 +8,7 @@ Requirements:
 
 - Node.js `24.16.0` or compatible with the root `package.json` engines
 - pnpm `10.34.1`
-- Docker, if you need the local Postgres/PostGIS database
+- Docker, if you need the local Postgres/PostGIS database or Redis
 
 Setup:
 
@@ -16,10 +16,11 @@ Setup:
 pnpm install
 cp .env.example .env
 pnpm db:dev:start
+pnpm redis:dev:start
 pnpm dev
 ```
 
-The main web app runs on port `3030` through `apps/web`. Other apps and services are managed by Turborepo from the root `pnpm dev` command.
+The main web app runs on port `3030` through `apps/web` and serves the tRPC HTTP API at `/api/trpc`. Other apps and services are managed by Turborepo from the root `pnpm dev` command.
 
 Useful commands:
 
@@ -39,6 +40,14 @@ pnpm db:dev:stop
 pnpm --filter @prossimo-app/db db:push
 ```
 
+Redis commands:
+
+```bash
+pnpm redis:dev:start
+pnpm redis:dev:stop
+pnpm redis:dev:logs
+```
+
 GTFS development:
 
 ```bash
@@ -49,8 +58,7 @@ pnpm --filter @prossimo-app/worker dev:sync-gtfs-static
 
 ```text
 apps/mobile      Expo app
-apps/web         Next.js landing site
-apps/api         API server
+apps/web         Next.js landing site and tRPC HTTP API
 apps/websocket   WebSocket server
 apps/worker      Scheduled and background jobs
 packages/api     Shared API router and transit logic

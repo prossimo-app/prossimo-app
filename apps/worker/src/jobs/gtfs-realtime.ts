@@ -25,7 +25,10 @@ import {
   parseGtfsRealtimeTripUpdates,
   parseGtfsRealtimeVehiclePositions,
 } from "@prossimo-app/gtfs";
-import { createRedisClientFromEnv } from "@prossimo-app/redis";
+import {
+  createRedisClientFromEnv,
+  isRedisConfiguredFromEnv,
+} from "@prossimo-app/redis";
 
 import type { ScheduledJob, WorkerContext } from "../scheduler.js";
 
@@ -164,10 +167,7 @@ function getRedisClient() {
     return redisClient;
   }
 
-  redisClient =
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-      ? createRedisClientFromEnv()
-      : null;
+  redisClient = isRedisConfiguredFromEnv() ? createRedisClientFromEnv() : null;
 
   return redisClient;
 }
