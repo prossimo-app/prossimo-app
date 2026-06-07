@@ -3,15 +3,15 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
-type LegalDocumentTocItem = {
+interface LegalDocumentTocItem {
   id: string;
   title: string;
-};
+}
 
-type LegalDocumentTocProps = {
+interface LegalDocumentTocProps {
   label: string;
   items: readonly LegalDocumentTocItem[];
-};
+}
 
 export function LegalDocumentToc({ items, label }: LegalDocumentTocProps) {
   const [activeId, setActiveId] = useState(items[0]?.id ?? "");

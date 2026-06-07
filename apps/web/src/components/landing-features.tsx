@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 
-type LandingFeature = {
+interface LandingFeature {
   body: string;
   imageAlt: string;
   imageHeight: number;
@@ -13,7 +13,7 @@ type LandingFeature = {
   size: "large" | "medium" | "small";
   title: string;
   tone: "blue" | "green" | "rose" | "yellow";
-};
+}
 
 const featureTones: Record<LandingFeature["tone"], string> = {
   blue: "from-primary/12 via-primary/5 to-background",
@@ -28,11 +28,11 @@ const featureSizes: Record<LandingFeature["size"], string> = {
   small: "",
 };
 
-type LandingFeaturesProps = {
+interface LandingFeaturesProps {
   features: LandingFeature[];
   subtitle: string;
   title: string;
-};
+}
 
 export function LandingFeatures({
   title,

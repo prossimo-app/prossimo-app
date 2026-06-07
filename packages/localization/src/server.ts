@@ -41,7 +41,7 @@ function resolveNestedValue(resource: TranslationNode, key: string) {
   const value = key
     .split(".")
     .reduce<TranslationNode | string | undefined>((currentValue, keyPart) => {
-      if (typeof currentValue !== "object" || currentValue === null) {
+      if (typeof currentValue !== "object") {
         return undefined;
       }
 

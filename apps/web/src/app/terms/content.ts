@@ -1,6 +1,6 @@
 import type { SupportedLanguage } from "@prossimo-app/localization/server";
 
-export type TermsSection = {
+export interface TermsSection {
   after?: readonly string[];
   bullets?: readonly string[];
   groups?: readonly {
@@ -12,9 +12,9 @@ export type TermsSection = {
   id: string;
   paragraphs?: readonly string[];
   title: string;
-};
+}
 
-type TermsContent = {
+interface TermsContent {
   agreement: string;
   contactEmailLabel: string;
   contentsLabel: string;
@@ -28,7 +28,7 @@ type TermsContent = {
   };
   sections: readonly TermsSection[];
   title: string;
-};
+}
 
 export const termsContent = {
   en: {

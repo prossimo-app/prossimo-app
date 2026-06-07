@@ -27,14 +27,14 @@ const downloadBadges = {
   }
 >;
 
-type LandingHeroProps = {
+interface LandingHeroProps {
   ctaLabel: string;
   imageAlt: string;
   language: SupportedLanguage;
   legalDisclaimer: string;
   subtitle: string;
   title: string;
-};
+}
 
 export function LandingHero({
   title,

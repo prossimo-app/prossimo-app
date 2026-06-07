@@ -12,17 +12,17 @@ const panelTransition = {
   mass: 0.8,
 } as const;
 
-type LandingFaqItem = {
+interface LandingFaqItem {
   answer: string;
   question: string;
   value: string;
-};
+}
 
-type LandingFaqProps = {
+interface LandingFaqProps {
   items: LandingFaqItem[];
   subtitle: string;
   title: string;
-};
+}
 
 export function LandingFaq({ title, subtitle, items }: LandingFaqProps) {
   const shouldReduceMotion = useReducedMotion();

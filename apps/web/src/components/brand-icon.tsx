@@ -1,8 +1,8 @@
 import Image from "next/image";
 
-type BrandIconProps = {
+interface BrandIconProps {
   alt: string;
-};
+}
 
 export function BrandIcon({ alt }: BrandIconProps) {
   return (

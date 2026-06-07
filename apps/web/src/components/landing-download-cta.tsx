@@ -26,12 +26,12 @@ const downloadBadges = {
   }
 >;
 
-type LandingDownloadCtaProps = {
+interface LandingDownloadCtaProps {
   downloadLabel: string;
   language: SupportedLanguage;
   subtitle: string;
   title: string;
-};
+}
 
 export function LandingDownloadCta({
   title,

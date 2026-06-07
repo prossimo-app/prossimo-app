@@ -3,18 +3,18 @@ import { GithubLogoIcon, XLogoIcon } from "@phosphor-icons/react/dist/ssr";
 
 import { BrandIcon } from "./brand-icon";
 
-type FooterLink = {
+interface FooterLink {
   href: string;
   label: string;
-};
+}
 
-type FooterProps = {
+interface FooterProps {
   legalLabel: string;
   linksLabel: string;
   navigationLinks: FooterLink[];
   privacyPolicyLabel: string;
   termsOfUseLabel: string;
-};
+}
 
 const APP_NAME = "Prossimo";
 

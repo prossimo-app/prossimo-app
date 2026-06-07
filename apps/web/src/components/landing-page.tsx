@@ -1,6 +1,6 @@
 import type { SupportedLanguage } from "@prossimo-app/localization/server";
 
-import { Translator } from "~/utils/types";
+import type { Translator } from "~/utils/types";
 import { Footer } from "./footer";
 import { LandingDownloadCta } from "./landing-download-cta";
 import { LandingFaq } from "./landing-faq";

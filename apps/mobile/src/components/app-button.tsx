@@ -5,11 +5,10 @@ import type {
   TextStyle,
   ViewStyle,
 } from "react-native";
-import { StyleSheet, Text } from "react-native";
+import { Text } from "react-native";
 import * as Haptics from "expo-haptics";
 
 import { SpringPressable } from "~/components/spring-pressable";
-import { themeColors } from "~/theme/colors";
 
 type AppButtonProps = Omit<PressableProps, "children" | "style"> & {
   children: ReactNode;

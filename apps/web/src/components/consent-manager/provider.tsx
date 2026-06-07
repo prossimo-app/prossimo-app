@@ -1,11 +1,7 @@
 "use client";
 
-import { type ReactNode } from "react";
-import {
-  ConsentBanner,
-  ConsentDialog,
-  ConsentManagerProvider,
-} from "@c15t/nextjs";
+import type { ReactNode } from "react";
+import { ConsentManagerProvider } from "@c15t/nextjs";
 
 export default function ConsentManagerClient({
   children,

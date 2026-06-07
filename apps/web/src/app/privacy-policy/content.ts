@@ -1,6 +1,6 @@
 import type { SupportedLanguage } from "@prossimo-app/localization/server";
 
-export type PrivacyPolicySection = {
+export interface PrivacyPolicySection {
   after?: readonly string[];
   bullets?: readonly string[];
   groups?: readonly {
@@ -12,9 +12,9 @@ export type PrivacyPolicySection = {
   id: string;
   paragraphs?: readonly string[];
   title: string;
-};
+}
 
-type PrivacyPolicyContent = {
+interface PrivacyPolicyContent {
   contentsLabel: string;
   effectiveDate: string;
   effectiveDateLabel: string;
@@ -31,7 +31,7 @@ type PrivacyPolicyContent = {
   };
   sections: readonly PrivacyPolicySection[];
   title: string;
-};
+}
 
 export const privacyPolicyContent = {
   en: {
