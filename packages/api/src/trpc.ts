@@ -56,6 +56,13 @@ const rateLimitPolicies = {
     timeoutMs: 1_000,
     window: "1 m",
   },
+  news: {
+    algorithm: "slidingWindow",
+    limit: 120,
+    prefix: "news",
+    timeoutMs: 1_000,
+    window: "1 m",
+  },
   plannedUpcomingTrips: {
     algorithm: "slidingWindow",
     limit: 120,

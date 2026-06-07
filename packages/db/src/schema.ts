@@ -127,6 +127,51 @@ export const gtfsRealtimeAlertInformedEntities = pgTable(
   ],
 );
 
+export const strikeNotices = pgTable(
+  "strike_notices",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    source: text("source").notNull(),
+    sourceId: text("source_id").notNull(),
+    sourceHash: text("source_hash").notNull(),
+    title: text("title").notNull(),
+    description: text("description"),
+    link: text("link"),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    endsAt: timestamp("ends_at", { withTimezone: true }),
+    relevanceStatus: text("relevance_status").notNull(),
+    rawPayload: jsonb("raw_payload")
+      .default(sql`'{}'::jsonb`)
+      .notNull(),
+    firstSeenAt: timestamp("first_seen_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    uniqueIndex("strike_notices_source_id_unique").on(
+      table.source,
+      table.sourceId,
+    ),
+    uniqueIndex("strike_notices_source_hash_unique").on(
+      table.source,
+      table.sourceHash,
+    ),
+    index("strike_notices_source_relevance_starts_idx").on(
+      table.source,
+      table.relevanceStatus,
+      table.startsAt,
+    ),
+    index("strike_notices_published_idx").on(table.publishedAt),
+  ],
+);
+
 export const appSettings = pgTable("app_settings", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
@@ -472,6 +517,7 @@ export const schema = {
   gtfsFeedVersions,
   gtfsRealtimeAlertInformedEntities,
   gtfsRealtimeAlerts,
+  strikeNotices,
   routeServiceDays,
   routeStops,
   routes,

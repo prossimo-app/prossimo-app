@@ -33,6 +33,8 @@ import type {
   CachedStop,
   DrawerNearbyStop,
   DrawerStop,
+  RouteVehicle,
+  RouteVehiclesPayload,
   SelectedTransitLine,
   StopArrivalsPayload,
   TrackedTransitVehicle,
@@ -42,6 +44,10 @@ import type { RouterOutputs } from "~/utils/api";
 import { useAppBootstrap } from "~/app-bootstrap/app-bootstrap-provider";
 import { trpc, trpcClient } from "~/utils/api";
 import {
+  getStrikeTiming,
+  isVisibleStrikeNotice,
+} from "~/news/strike-notices";
+import {
   createArrivalGroups,
   createDisplayArrivals,
   parseStopArrivalsPayload,
@@ -50,7 +56,7 @@ import { DefaultDrawerContent } from "./home-bottom-drawer/default-drawer-conten
 import { SelectedStopDrawerContent } from "./home-bottom-drawer/selected-stop-drawer-content";
 
 const minTopGap = 96;
-const collapsedContentHeight = 320;
+const collapsedContentHeight = 250;
 const expandedContentHeight = 620;
 const drawerCornerRadius = 28;
 const drawerHeaderGap = 20;
@@ -157,10 +163,14 @@ interface HomeBottomDrawerProps {
   location?: Coordinates | null;
   onExpandedChange?: (isExpanded: boolean) => void;
   onFullHeightChange?: (isFullHeight: boolean) => void;
+  onRouteVehiclePress?: (vehicle: RouteVehicle) => void;
   onSelectedLineChange?: (line: SelectedTransitLine | null) => void;
+  onStopFollowingVehicle?: () => void;
   onStopSelect?: (stop: SelectedStop | null) => void;
   onTrackedVehicleChange?: (vehicle: TrackedTransitVehicle | null) => void;
+  routeVehiclesPayload?: RouteVehiclesPayload | null;
   selectedStop?: SelectedStop | null;
+  trackedVehicle?: TrackedTransitVehicle | null;
 }
 
 export function HomeBottomDrawer({
@@ -169,10 +179,14 @@ export function HomeBottomDrawer({
   location = null,
   onExpandedChange,
   onFullHeightChange,
+  onRouteVehiclePress,
   onSelectedLineChange,
+  onStopFollowingVehicle,
   onStopSelect,
   onTrackedVehicleChange,
+  routeVehiclesPayload = null,
   selectedStop = null,
+  trackedVehicle = null,
 }: HomeBottomDrawerProps) {
   const { t } = useTranslation();
   const { appBootstrap } = useAppBootstrap();
@@ -271,6 +285,18 @@ export function HomeBottomDrawer({
       }),
     [cachedStops, location, stopSearchQuery],
   );
+  const strikeQuery = useQuery({
+    ...trpc.news.getLatest.queryOptions({
+      globalNewsLimit: 1,
+      strikeLimit: 10,
+    }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const hasTodayStrike =
+    strikeQuery.data?.strikes.some(
+      (strike) =>
+        isVisibleStrikeNotice(strike) && getStrikeTiming(strike) === "today",
+    ) ?? false;
   const drawerRoutesQuery = useInfiniteQuery({
     enabled: Boolean(activeFeedVersionId),
     getNextPageParam: (lastPage: RoutesPage) =>
@@ -305,6 +331,24 @@ export function HomeBottomDrawer({
   );
   const selectedStopRealtimePayload =
     realtimePayload?.stopId === selectedStopRealtimeId ? realtimePayload : null;
+  const selectedStopAlertsInput = useMemo(
+    () =>
+      selectedStop
+        ? {
+            limit: 20,
+            source: "gtt",
+            stopCode: selectedStop.stopCode,
+            stopId: selectedStop.stopId,
+          }
+        : null,
+    [selectedStop],
+  );
+  const selectedStopAlertsQuery = useQuery({
+    ...trpc.alerts.getForStop.queryOptions(
+      selectedStopAlertsInput ?? skipToken,
+    ),
+    staleTime: 60_000,
+  });
   const { data: plannedTripsData, isLoading: isLoadingPlannedTrips } = useQuery(
     {
       ...trpc.transit.getPlannedUpcomingTrips.queryOptions(
@@ -713,6 +757,7 @@ export function HomeBottomDrawer({
     (line: (typeof drawerLines)[number]) => {
       onSelectedLineChange?.({
         color: line.color,
+        routeLabel: line.shortName,
         routeId: line.routeId,
         routeType: line.type,
       });
@@ -782,8 +827,10 @@ export function HomeBottomDrawer({
 
           {selectedStop && !isShowingDefaultStopDetail ? (
             <SelectedStopDrawerContent
+              alerts={selectedStopAlertsQuery.data?.alerts ?? []}
               arrivalGroups={selectedStopArrivalGroups}
               isLoading={isLoadingPlannedTrips}
+              isLoadingAlerts={selectedStopAlertsQuery.isLoading}
               isLastUpdatedRefreshing={isLastUpdatedRefreshing}
               isRealtimeDataPending={isSelectedStopRealtimeDataPending}
               isRealtimeDataStale={isSelectedStopRealtimeDataStale}
@@ -822,14 +869,18 @@ export function HomeBottomDrawer({
               stopCode={
                 plannedTripsData?.stop?.stopCode ?? selectedStop.stopCode
               }
+              stopId={selectedStop.stopId}
               stopName={
                 plannedTripsData?.stop?.stopName ?? selectedStop.stopName
               }
             />
           ) : (
             <DefaultDrawerContent
+              currentTimeMs={currentTimeMs}
+              hasTodayStrike={hasTodayStrike}
               nearbyRadiusMeters={nearbyStopRadiusMeters}
               nearbyStops={nearbyStops}
+              location={location}
               lines={drawerLines}
               onSearchBlur={() => {
                 if (!shouldRestoreSearchFocusStopRef.current) {
@@ -857,6 +908,8 @@ export function HomeBottomDrawer({
               onLineBack={() => {
                 closeLineDetail();
               }}
+              onRouteVehiclePress={onRouteVehiclePress}
+              onStopFollowingVehicle={onStopFollowingVehicle}
               onStopArrivalScroll={handleArrivalScroll}
               onStopBack={closeDefaultStopDetail}
               onStopLineDetailClose={closeLineDetail}
@@ -879,13 +932,16 @@ export function HomeBottomDrawer({
               }}
               onStopPress={handleDefaultStopPress}
               panHandlers={panResponder.panHandlers}
+              routeVehiclesPayload={routeVehiclesPayload}
               searchInputRef={searchInputRef}
               searchQuery={stopSearchQuery}
               searchResults={searchedStops}
               scrollBottomPadding={scrollBottomPadding}
               stopDetail={{
+                alerts: selectedStopAlertsQuery.data?.alerts ?? [],
                 arrivalGroups: selectedStopArrivalGroups,
                 isOpen: Boolean(defaultStopDetailStopId),
+                isLoadingAlerts: selectedStopAlertsQuery.isLoading,
                 isLastUpdatedRefreshing,
                 isRealtimeDataPending: isSelectedStopRealtimeDataPending,
                 isRealtimeDataStale: isSelectedStopRealtimeDataStale,
@@ -893,6 +949,7 @@ export function HomeBottomDrawer({
                 lastUpdatedAt: selectedStopLastUpdatedAt ?? null,
                 selectedStop: isShowingDefaultStopDetail ? selectedStop : null,
               }}
+              trackedVehicle={trackedVehicle}
             />
           )}
         </View>

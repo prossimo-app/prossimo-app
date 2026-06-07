@@ -12,14 +12,16 @@ export function BrandIcon({ alt }: BrandIconProps) {
         alt={alt}
         width={15}
         height={15}
-        className="dark:hidden"
+        className="select-none dark:hidden"
+        draggable={false}
       />
       <Image
         src="/icon/icon-dark.svg"
         alt={alt}
         width={15}
         height={15}
-        className="hidden dark:block"
+        className="hidden select-none dark:block"
+        draggable={false}
       />
     </>
   );

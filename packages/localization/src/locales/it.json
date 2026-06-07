@@ -71,6 +71,7 @@
     },
     "map": {
       "zoomWarning": "Ingrandisci la mappa per vedere le fermate vicine.",
+      "followingVehicle": "Stai seguendo: {{vehicle}}",
       "clusterTitle": "{{count}} fermate",
       "unavailable": "Le mappe sono disponibili solo su Android e iOS."
     },
@@ -109,6 +110,17 @@
         "tram": "Tram",
         "unknown": "Linea di trasporto"
       },
+      "lineDetail": {
+        "distanceAway": "a {{distance}}",
+        "focusVehicle": "Centra il mezzo {{vehicle}} sulla linea {{line}}",
+        "following": "Seguito",
+        "liveVehicle": "Mezzo live",
+        "liveVehicles": "{{count}} mezzi live",
+        "noLiveVehicles": "Nessun mezzo live su questa linea al momento.",
+        "stopSequence": "Sequenza fermata {{sequence}}",
+        "stopFollowing": "Interrompi",
+        "vehicleUpdatedAt": "Aggiornato alle {{time}}"
+      },
       "arrivals": {
         "due": "Ora",
         "empty": "Nessun arrivo in arrivo al momento.",
@@ -126,13 +138,30 @@
         "stopCode": "Fermata {{code}}",
         "updatedAt": "Ultimo aggiornamento alle {{time}}",
         "toward": "Verso {{destination}}"
+      },
+      "alerts": {
+        "emptyDescription": "Gli avvisi correnti per questa fermata appariranno qui.",
+        "emptyTitle": "Nessun avviso fermata",
+        "lineModalTitle": "Avvisi linea",
+        "modalTitle": "Avvisi fermata",
+        "open": "Apri avvisi fermata",
+        "showMore": "Mostra altri {{count}}",
+        "source": "Avviso di servizio da GTT",
+        "title": "Avviso di servizio"
+      },
+      "strikeAlert": {
+        "title": "Sciopero oggi",
+        "description": "Uno sciopero dei trasporti è previsto per oggi. Alcuni servizi potrebbero subire interruzioni.",
+        "action": "Dettagli"
       }
     }
   },
   "news": {
     "title": "Novita",
     "sections": {
-      "recent": "Novita recenti"
+      "recent": "Novita recenti",
+      "serviceNews": "Notizie di servizio",
+      "strikes": "Scioperi"
     },
     "alerts": {
       "noDescription": "Avviso di servizio"
@@ -144,6 +173,21 @@
     "empty": {
       "title": "Nessuna novita",
       "description": "Gli aggiornamenti recenti appariranno qui."
+    },
+    "strikes": {
+      "emptyTitle": "Nessuno sciopero",
+      "emptyDescription": "Nessuno sciopero rilevante segnalato al momento.",
+      "readMore": "Leggi",
+      "detailTitle": "Avviso sciopero",
+      "close": "Chiudi avviso sciopero",
+      "openLink": "Apri fonte",
+      "summary": {
+        "today": "Sciopero oggi, tocca per leggere",
+        "tomorrow": "Sciopero domani, tocca per leggere",
+        "nextWeek": "Sciopero la prossima settimana il {{date}}, tocca per leggere",
+        "incoming": "Sciopero in arrivo il {{date}}, tocca per leggere",
+        "incomingWithoutDate": "Sciopero in arrivo, tocca per leggere"
+      }
     }
   },
   "onboarding": {
@@ -250,7 +294,11 @@
       "title": "Fonti dati",
       "sourceName": "GTT S.p.A. – Gruppo Torinese Trasporti",
       "sourceDescription": "I dati del trasporto sono presi dal feed GTFS real-time fornito da GTT S.p.A. – Gruppo Torinese Trasporti.",
-      "independentDisclaimer": "Prossimo e un'app indipendente e non e affiliata a GTT o 5T."
+      "strikeSourceName": "Ministero delle Infrastrutture e dei Trasporti (MIT)",
+      "strikeSourceDescription": "Gli avvisi di sciopero provengono dal feed RSS pubblico del Ministero delle Infrastrutture e dei Trasporti.",
+      "mapSourceName": "Google Maps",
+      "mapSourceDescription": "I dati della mappa su Android sono forniti da Google Maps. I contenuti di Google Maps sono soggetti ai termini e all'informativa sulla privacy di Google.",
+      "independentDisclaimer": "Prossimo e un'app indipendente e non e affiliata a GTT, 5T o al Ministero delle Infrastrutture e dei Trasporti."
     },
     "legal": {
       "privacyPolicy": "Informativa sulla privacy",

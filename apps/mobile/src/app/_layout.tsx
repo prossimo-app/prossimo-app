@@ -150,6 +150,15 @@ function RootStack() {
           }}
         />
         <Stack.Screen
+          name="stop-alerts"
+          options={{
+            ...groupedHeaderBackgroundOptions,
+            headerShown: true,
+            headerTitle: t("home.drawer.alerts.modalTitle"),
+            presentation: "modal",
+          }}
+        />
+        <Stack.Screen
           name="news"
           options={{
             ...groupedHeaderBackgroundOptions,

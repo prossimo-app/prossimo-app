@@ -3,6 +3,7 @@ import type {
   DisplayArrival,
   PlannedUpcomingTripsOutput,
   RealtimeTopicOutput,
+  RouteVehiclesPayload,
   RouteType,
   StopArrivalsPayload,
   Translate,
@@ -294,6 +295,36 @@ export function parseStopArrivalsPayload(
   };
 }
 
+export function parseRouteVehiclesPayload(
+  data: RealtimeTopicOutput,
+): RouteVehiclesPayload | null {
+  if (!data || typeof data !== "object" || !("payload" in data)) {
+    return null;
+  }
+
+  const payload = data.payload;
+
+  if (!isRecord(payload) || !Array.isArray(payload.vehicles)) {
+    return null;
+  }
+
+  const routeId = typeof payload.routeId === "string" ? payload.routeId : null;
+
+  if (!routeId) {
+    return null;
+  }
+
+  return {
+    fetchedAt: typeof payload.fetchedAt === "string" ? payload.fetchedAt : "",
+    routeId,
+    vehicles: payload.vehicles
+      .map(parseRouteVehicle)
+      .filter((vehicle): vehicle is RouteVehiclesPayload["vehicles"][number] =>
+        Boolean(vehicle),
+      ),
+  };
+}
+
 function normalizeLineSearchValue(value: string) {
   return value.trim().toLocaleLowerCase("it-IT");
 }
@@ -346,6 +377,41 @@ function parseStopArrival(
     tripId: getNullableString(value.tripId),
     vehicleId: getNullableString(value.vehicleId),
     vehiclePosition: parseVehiclePosition(value.vehiclePosition),
+  };
+}
+
+function parseRouteVehicle(
+  value: unknown,
+): RouteVehiclesPayload["vehicles"][number] | null {
+  if (!isRecord(value) || typeof value.id !== "string") {
+    return null;
+  }
+
+  const lat = value.lat;
+  const lon = value.lon;
+
+  if (
+    typeof lat !== "number" ||
+    typeof lon !== "number" ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon)
+  ) {
+    return null;
+  }
+
+  return {
+    bearing: getNullableNumber(value.bearing),
+    currentStopSequence: getNullableNumber(value.currentStopSequence),
+    id: value.id,
+    label: getNullableString(value.label),
+    lat,
+    lon,
+    routeId: getNullableString(value.routeId),
+    speed: getNullableNumber(value.speed),
+    stopId: getNullableString(value.stopId),
+    timestamp: getNullableNumber(value.timestamp),
+    tripId: getNullableString(value.tripId),
+    vehicleId: getNullableString(value.vehicleId),
   };
 }
 

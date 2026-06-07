@@ -71,6 +71,7 @@
     },
     "map": {
       "zoomWarning": "Zoom in to see nearby stops.",
+      "followingVehicle": "Currently following: {{vehicle}}",
       "clusterTitle": "{{count}} stops",
       "unavailable": "Maps are only available on Android and iOS."
     },
@@ -109,6 +110,17 @@
         "tram": "Tram",
         "unknown": "Transit line"
       },
+      "lineDetail": {
+        "distanceAway": "{{distance}} away",
+        "focusVehicle": "Focus vehicle {{vehicle}} on line {{line}}",
+        "following": "Following",
+        "liveVehicle": "Live vehicle",
+        "liveVehicles": "{{count}} live vehicles",
+        "noLiveVehicles": "No live vehicles on this line right now.",
+        "stopSequence": "Stop sequence {{sequence}}",
+        "stopFollowing": "Stop following",
+        "vehicleUpdatedAt": "Updated at {{time}}"
+      },
       "arrivals": {
         "due": "Now",
         "empty": "No incoming arrivals right now.",
@@ -126,13 +138,30 @@
         "stopCode": "Stop {{code}}",
         "updatedAt": "Last updated at {{time}}",
         "toward": "Toward {{destination}}"
+      },
+      "alerts": {
+        "emptyDescription": "Current alerts for this stop will appear here.",
+        "emptyTitle": "No stop alerts",
+        "lineModalTitle": "Line alerts",
+        "modalTitle": "Stop alerts",
+        "open": "Open stop alerts",
+        "showMore": "Show {{count}} more",
+        "source": "Service alert from GTT",
+        "title": "Service alert"
+      },
+      "strikeAlert": {
+        "title": "Strike today",
+        "description": "A transit strike is scheduled for today. Some services may be disrupted.",
+        "action": "View details"
       }
     }
   },
   "news": {
     "title": "News",
     "sections": {
-      "recent": "Recent news"
+      "recent": "Recent news",
+      "serviceNews": "Service news",
+      "strikes": "Strikes"
     },
     "alerts": {
       "noDescription": "Service alert"
@@ -144,6 +173,21 @@
     "empty": {
       "title": "No news",
       "description": "Recent updates will appear here."
+    },
+    "strikes": {
+      "emptyTitle": "No strikes",
+      "emptyDescription": "No relevant strikes currently reported.",
+      "readMore": "Read more",
+      "detailTitle": "Strike notice",
+      "close": "Close strike notice",
+      "openLink": "Open source",
+      "summary": {
+        "today": "Strike today, press to read more",
+        "tomorrow": "Strike tomorrow, press to read more",
+        "nextWeek": "Strike next week on {{date}}, press to read more",
+        "incoming": "Incoming strike on {{date}}, press to read more",
+        "incomingWithoutDate": "Incoming strike, press to read more"
+      }
     }
   },
   "onboarding": {
@@ -250,7 +294,11 @@
       "title": "Data sources",
       "sourceName": "GTT S.p.A. – Gruppo Torinese Trasporti",
       "sourceDescription": "Transit data is taken from the GTFS real-time feed provided by GTT S.p.A. – Gruppo Torinese Trasporti.",
-      "independentDisclaimer": "Prossimo is an independent app and is not affiliated with GTT or 5T."
+      "strikeSourceName": "Ministero delle Infrastrutture e dei Trasporti (MIT)",
+      "strikeSourceDescription": "Strike notices are sourced from the public RSS feed provided by the Italian Ministry of Infrastructure and Transport (Ministero delle Infrastrutture e dei Trasporti).",
+      "mapSourceName": "Google Maps",
+      "mapSourceDescription": "Map data on Android is provided by Google Maps. Google Maps content is subject to Google's terms and privacy policy.",
+      "independentDisclaimer": "Prossimo is an independent app and is not affiliated with GTT, 5T, or the Italian Ministry of Infrastructure and Transport."
     },
     "legal": {
       "privacyPolicy": "Privacy Policy",

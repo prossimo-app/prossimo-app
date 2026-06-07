@@ -20,6 +20,8 @@ export type PlannedUpcomingTrip =
   PlannedUpcomingTripsOutput["plannedUpcomingTrips"][number];
 export type RouteType = PlannedUpcomingTrip["routeType"];
 export type RealtimeTopicOutput = RouterOutputs["realtime"]["getTopic"]["data"];
+export type ServiceAlert =
+  RouterOutputs["alerts"]["getForStop"]["alerts"][number];
 
 export type DisplayArrival = PlannedUpcomingTrip & {
   isRealtime: boolean;
@@ -40,13 +42,17 @@ export interface TrackedTransitVehicle {
     latitude: number;
     longitude: number;
   };
+  bearing?: number | null;
   id: string;
   routeLabel: string;
   routeType: RouteType;
+  timestamp?: number | null;
+  tripId?: string | null;
 }
 
 export interface SelectedTransitLine {
   color: string | null;
+  routeLabel: string;
   routeId: string;
   routeType: RouteType;
 }
@@ -80,6 +86,27 @@ export interface StopArrivalsPayload {
   stopId: string;
 }
 
+export interface RouteVehiclesPayload {
+  fetchedAt: string;
+  routeId: string;
+  vehicles: RouteVehicle[];
+}
+
+export interface RouteVehicle {
+  bearing: number | null;
+  currentStopSequence: number | null;
+  id: string;
+  label: string | null;
+  lat: number;
+  lon: number;
+  routeId: string | null;
+  speed: number | null;
+  stopId: string | null;
+  timestamp: number | null;
+  tripId: string | null;
+  vehicleId: string | null;
+}
+
 export interface ArrivalGroup {
   arrivals: DisplayArrival[];
   color: string | null;
@@ -93,8 +120,10 @@ export interface DrawerDragHandleProps {
 }
 
 export interface SelectedStopDrawerContentProps {
+  alerts: ServiceAlert[];
   arrivalGroups: ArrivalGroup[];
   isLoading: boolean;
+  isLoadingAlerts: boolean;
   isLastUpdatedRefreshing: boolean;
   isRealtimeDataPending: boolean;
   isRealtimeDataStale: boolean;
@@ -112,5 +141,6 @@ export interface SelectedStopDrawerContentProps {
   searchInputRef: RefObject<TextInput | null>;
   scrollBottomPadding: number;
   stopCode: string | null;
+  stopId: string;
   stopName: string;
 }

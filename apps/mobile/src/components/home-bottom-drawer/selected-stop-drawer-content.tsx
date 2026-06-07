@@ -1,3 +1,4 @@
+import type { Coordinates } from "expo-maps";
 import type { GestureResponderHandlers } from "react-native";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -16,6 +17,7 @@ import {
   KeyboardAwareScrollView,
   KeyboardController,
 } from "react-native-keyboard-controller";
+import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import ChevronRightIcon from "@expo/material-symbols/chevron_right.xml";
 import BusIcon from "@expo/material-symbols/directions_bus.xml";
@@ -29,6 +31,7 @@ import {
   contentTransition,
   frame,
 } from "@expo/ui/swift-ui/modifiers";
+import { skipToken, useQuery } from "@tanstack/react-query";
 
 import { useTranslation } from "@prossimo-app/localization";
 
@@ -37,11 +40,15 @@ import type {
   DisplayArrival,
   LastUpdatedDisplay,
   RouteType,
+  RouteVehicle,
   SelectedStopDrawerContentProps,
+  ServiceAlert,
   TrackedTransitVehicle,
+  Translate,
 } from "./types";
 import { SearchInput } from "~/components/search-input";
 import { getWarningForegroundColor } from "~/theme/native-colors";
+import { trpc } from "~/utils/api";
 import {
   filterArrivalGroups,
   formatArrivalMinutes,
@@ -78,9 +85,16 @@ const lineCardChevronIcon = Icon.select({
   android: ChevronRightIcon,
 });
 
+interface LatLon {
+  latitude: number;
+  longitude: number;
+}
+
 export function SelectedStopDrawerContent({
+  alerts,
   arrivalGroups,
   isLoading,
+  isLoadingAlerts,
   isLastUpdatedRefreshing,
   isRealtimeDataPending,
   isRealtimeDataStale,
@@ -98,6 +112,7 @@ export function SelectedStopDrawerContent({
   searchInputRef,
   scrollBottomPadding,
   stopCode,
+  stopId,
   stopName,
 }: SelectedStopDrawerContentProps) {
   const { t } = useTranslation();
@@ -119,6 +134,16 @@ export function SelectedStopDrawerContent({
   );
   const isFiltering = lineSearchQuery.trim().length > 0;
   const lastUpdatedDisplay = getLastUpdatedDisplay(lastUpdatedAt, t);
+  const handleStopAlertsPress = useCallback(() => {
+    router.push({
+      pathname: "/stop-alerts",
+      params: {
+        stopCode: stopCode ?? "",
+        stopId,
+        stopName,
+      },
+    });
+  }, [stopCode, stopId, stopName]);
 
   useEffect(() => {
     onTrackedVehicleChange(selectedTrackedVehicle);
@@ -132,6 +157,7 @@ export function SelectedStopDrawerContent({
 
     onSelectedLineChange({
       color: selectedLatestArrivalGroup.color,
+      routeLabel: selectedLatestArrivalGroup.label,
       routeId: selectedLatestArrivalGroup.key,
       routeType: selectedLatestArrivalGroup.routeType,
     });
@@ -238,8 +264,10 @@ export function SelectedStopDrawerContent({
         style={[styles.page, listPageAnimatedStyle]}
       >
         <ArrivalLineList
+          alerts={alerts}
           filteredArrivalGroups={filteredArrivalGroups}
           isFiltering={isFiltering}
+          isLoadingAlerts={isLoadingAlerts}
           isLastUpdatedRefreshing={isLastUpdatedRefreshing}
           isLoading={isLoading}
           isRealtimeDataPending={isRealtimeDataPending}
@@ -248,6 +276,7 @@ export function SelectedStopDrawerContent({
           lineSearchQuery={lineSearchQuery}
           onArrivalScroll={onArrivalScroll}
           onBack={onBack}
+          onStopAlertsPress={alerts.length > 0 ? handleStopAlertsPress : null}
           onLinePress={handleLinePress}
           onSearchBlur={onSearchBlur}
           onSearchChangeText={setLineSearchQuery}
@@ -276,6 +305,7 @@ export function SelectedStopDrawerContent({
             onScroll={onArrivalScroll}
             panHandlers={panHandlers}
             scrollBottomPadding={scrollBottomPadding}
+            showRouteVehicles={false}
             stopName={stopName}
           />
         </Animated.View>
@@ -285,8 +315,10 @@ export function SelectedStopDrawerContent({
 }
 
 function ArrivalLineList({
+  alerts,
   filteredArrivalGroups,
   isFiltering,
+  isLoadingAlerts,
   isLastUpdatedRefreshing,
   isLoading,
   isRealtimeDataPending,
@@ -299,13 +331,16 @@ function ArrivalLineList({
   onSearchBlur,
   onSearchChangeText,
   onSearchFocus,
+  onStopAlertsPress,
   panHandlers,
   searchInputRef,
   scrollBottomPadding,
   stopName,
 }: {
+  alerts: ServiceAlert[];
   filteredArrivalGroups: ArrivalGroup[];
   isFiltering: boolean;
+  isLoadingAlerts: boolean;
   isLastUpdatedRefreshing: boolean;
   isLoading: boolean;
   isRealtimeDataPending: boolean;
@@ -318,6 +353,7 @@ function ArrivalLineList({
   onSearchBlur: () => void;
   onSearchChangeText: (query: string) => void;
   onSearchFocus: () => void;
+  onStopAlertsPress: (() => void) | null;
   panHandlers: GestureResponderHandlers;
   searchInputRef: SelectedStopDrawerContentProps["searchInputRef"];
   scrollBottomPadding: number;
@@ -351,6 +387,14 @@ function ArrivalLineList({
               />
             ) : null}
           </View>
+          {onStopAlertsPress ? (
+            <DrawerIconButton
+              accessibilityLabel={t("home.drawer.alerts.open")}
+              hasBadge={alerts.length > 0}
+              icon="news"
+              onPress={onStopAlertsPress}
+            />
+          ) : null}
         </View>
         <SearchInput
           accessibilityLabel={t("home.drawer.arrivals.searchLines")}
@@ -387,6 +431,7 @@ function ArrivalLineList({
           ) : isRealtimeDataStale ? (
             <RealtimeDataAlert type="stale" />
           ) : null}
+          <StopServiceAlertList alerts={alerts} isLoading={isLoadingAlerts} />
           {isLoading ? (
             <ArrivalSkeletonList />
           ) : filteredArrivalGroups.length > 0 ? (
@@ -426,10 +471,17 @@ export function ArrivalLineDetail({
   lastUpdatedDisplay,
   onBack,
   onClose,
+  onRouteVehiclePress,
   onScroll,
+  onStopFollowingVehicle,
   panHandlers,
+  routeVehicles = [],
   scrollBottomPadding,
+  showArrivalDetails = true,
+  showRouteVehicles = true,
   stopName,
+  trackedVehicleId = null,
+  userLocation = null,
 }: {
   emptyMessage?: string;
   group: ArrivalGroup;
@@ -439,13 +491,44 @@ export function ArrivalLineDetail({
   lastUpdatedDisplay: LastUpdatedDisplay | null;
   onBack: () => void;
   onClose?: () => void;
+  onRouteVehiclePress?: (vehicle: RouteVehicle) => void;
   onScroll: SelectedStopDrawerContentProps["onArrivalScroll"];
+  onStopFollowingVehicle?: () => void;
   panHandlers: GestureResponderHandlers;
+  routeVehicles?: RouteVehicle[];
   scrollBottomPadding: number;
+  showArrivalDetails?: boolean;
+  showRouteVehicles?: boolean;
   stopName?: string | null;
+  trackedVehicleId?: string | null;
+  userLocation?: Coordinates | null;
 }) {
   const { t } = useTranslation();
   const routeTypeIcon = routeTypeIcons[group.routeType];
+  const lineAlertsQuery = useQuery({
+    ...trpc.alerts.getForRoute.queryOptions(
+      group.key
+        ? {
+            limit: 20,
+            routeId: group.key,
+            routeType: group.routeType,
+            source: "gtt",
+          }
+        : skipToken,
+    ),
+    staleTime: 60_000,
+  });
+  const lineAlerts = lineAlertsQuery.data?.alerts ?? [];
+  const handleLineAlertsPress = useCallback(() => {
+    router.push({
+      pathname: "/stop-alerts",
+      params: {
+        routeId: group.key,
+        routeLabel: group.label,
+        routeType: group.routeType,
+      },
+    });
+  }, [group.key, group.label, group.routeType]);
 
   return (
     <>
@@ -457,7 +540,7 @@ export function ArrivalLineDetail({
             onPress={onBack}
           />
           <View
-            className="h-10 min-w-12 items-center justify-center rounded-full px-3"
+            className="h-10 w-10 items-center justify-center rounded-full px-3"
             style={{
               backgroundColor: normalizeRouteColor(group.color),
             }}
@@ -489,6 +572,14 @@ export function ArrivalLineDetail({
               </Text>
             ) : null}
           </View>
+          {lineAlerts.length > 0 ? (
+            <DrawerIconButton
+              accessibilityLabel={t("home.drawer.alerts.open")}
+              hasBadge
+              icon="news"
+              onPress={handleLineAlertsPress}
+            />
+          ) : null}
           <DrawerIconButton
             accessibilityLabel={t("home.drawer.closeAccessibilityLabel")}
             icon="close"
@@ -506,7 +597,6 @@ export function ArrivalLineDetail({
         ) : isRealtimeDataStale ? (
           <RealtimeDataAlert type="stale" />
         ) : null}
-        <RealtimeArrivalLegend />
       </View>
 
       <ScrollView
@@ -516,23 +606,463 @@ export function ArrivalLineDetail({
         scrollEventThrottle={16}
         showsVerticalScrollIndicator={false}
       >
-        {group.arrivals.length > 0 ? (
-          group.arrivals.map((arrival, index) => (
-            <ArrivalDetailRow
-              arrival={arrival}
-              key={`${arrival.tripId}:${arrival.directionId}:${arrival.arrivalSeconds}:${index}`}
-            />
-          ))
-        ) : emptyMessage ? (
-          <View className="bg-card rounded-2xl p-4">
-            <Text className="text-muted-foreground text-center font-sans text-sm">
-              {emptyMessage}
-            </Text>
-          </View>
+        <ServiceAlertList
+          alerts={lineAlerts}
+          isLoading={lineAlertsQuery.isLoading}
+        />
+        {showRouteVehicles ? (
+          <RouteVehicleList
+            followedVehicleId={trackedVehicleId}
+            isPending={isRealtimeDataPending}
+            onStopFollowing={onStopFollowingVehicle}
+            routeLabel={group.label}
+            userLocation={userLocation}
+            vehicles={routeVehicles}
+            onVehiclePress={onRouteVehiclePress}
+          />
+        ) : null}
+        {showArrivalDetails ? (
+          <>
+            <RealtimeArrivalLegend />
+            {group.arrivals.length > 0 ? (
+              group.arrivals.map((arrival, index) => (
+                <ArrivalDetailRow
+                  arrival={arrival}
+                  key={`${arrival.tripId}:${arrival.directionId}:${arrival.arrivalSeconds}:${index}`}
+                />
+              ))
+            ) : emptyMessage ? (
+              <View className="bg-card rounded-2xl p-4">
+                <Text className="text-muted-foreground text-center font-sans text-sm">
+                  {emptyMessage}
+                </Text>
+              </View>
+            ) : null}
+          </>
         ) : null}
       </ScrollView>
     </>
   );
+}
+
+function ServiceAlertList({
+  alerts,
+  isLoading,
+}: {
+  alerts: ServiceAlert[];
+  isLoading: boolean;
+}) {
+  return <HighSeverityServiceAlertList alerts={alerts} isLoading={isLoading} />;
+}
+
+function RouteVehicleList({
+  followedVehicleId,
+  isPending,
+  onStopFollowing,
+  onVehiclePress,
+  routeLabel,
+  userLocation,
+  vehicles,
+}: {
+  followedVehicleId?: string | null;
+  isPending: boolean;
+  onStopFollowing?: () => void;
+  onVehiclePress?: (vehicle: RouteVehicle) => void;
+  routeLabel: string;
+  userLocation?: Coordinates | null;
+  vehicles: RouteVehicle[];
+}) {
+  const { t } = useTranslation();
+  const sortedVehicles = useMemo(
+    () =>
+      sortRouteVehiclesByFollowedAndDistance(
+        vehicles,
+        followedVehicleId ?? null,
+        userLocation ?? null,
+      ),
+    [followedVehicleId, userLocation, vehicles],
+  );
+
+  if (isPending) {
+    return <RouteVehicleSkeletonList />;
+  }
+
+  if (vehicles.length === 0) {
+    return (
+      <View className="bg-card rounded-2xl p-4">
+        <Text className="text-muted-foreground text-center font-sans text-sm">
+          {t("home.drawer.lineDetail.noLiveVehicles")}
+        </Text>
+      </View>
+    );
+  }
+
+  return (
+    <View className="gap-2">
+      {sortedVehicles.map((vehicle) => {
+        const isFollowing = vehicle.id === followedVehicleId;
+
+        return (
+          <Pressable
+            accessibilityLabel={t("home.drawer.lineDetail.focusVehicle", {
+              line: routeLabel,
+              vehicle: getRouteVehicleLabel(vehicle),
+            })}
+            accessibilityRole="button"
+            className={`border-border flex-row items-center gap-3 rounded-2xl p-3 active:opacity-80 ${
+              isFollowing ? "bg-green-100 dark:bg-green-900/60" : "bg-card"
+            }`}
+            key={`${vehicle.id}:${vehicle.tripId ?? ""}`}
+            onPress={() => {
+              onVehiclePress?.(vehicle);
+            }}
+          >
+            <View className="bg-primary h-10 min-w-10 items-center justify-center rounded-full px-2">
+              <Text
+                className="font-sans text-xs font-bold text-white"
+                numberOfLines={1}
+              >
+                {getRouteVehicleBadge(vehicle)}
+              </Text>
+            </View>
+            <View className="min-w-0 flex-1 gap-1">
+              <View className="flex-row items-center gap-2">
+                <Text
+                  className="text-foreground min-w-0 flex-1 font-sans text-base font-bold"
+                  numberOfLines={1}
+                >
+                  {getRouteVehicleLabel(vehicle)}
+                </Text>
+              </View>
+              <Text
+                className="text-muted-foreground font-sans text-xs"
+                numberOfLines={1}
+              >
+                {getRouteVehicleDetail(vehicle, t, userLocation ?? null)}
+              </Text>
+            </View>
+            {isFollowing ? (
+              <Pressable
+                accessibilityLabel={t("home.drawer.lineDetail.stopFollowing")}
+                accessibilityRole="button"
+                className="rounded-full px-2 py-1 active:opacity-75"
+                hitSlop={8}
+                onPress={(event) => {
+                  event.stopPropagation();
+                  onStopFollowing?.();
+                }}
+              >
+                <Text className="text-primary font-sans text-xs font-bold">
+                  {t("home.drawer.lineDetail.stopFollowing")}
+                </Text>
+              </Pressable>
+            ) : (
+              <SymbolView
+                name={{ ios: "location.fill", android: "location_on" }}
+                size={18}
+                tintColor="#2563eb"
+              />
+            )}
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
+function sortRouteVehiclesByFollowedAndDistance(
+  vehicles: RouteVehicle[],
+  followedVehicleId: string | null,
+  userLocation: Coordinates | null,
+) {
+  return [...vehicles].sort((left, right) => {
+    if (left.id === followedVehicleId) {
+      return -1;
+    }
+
+    if (right.id === followedVehicleId) {
+      return 1;
+    }
+
+    const leftDistance = getRouteVehicleDistanceMeters(left, userLocation);
+    const rightDistance = getRouteVehicleDistanceMeters(right, userLocation);
+
+    if (leftDistance !== null && rightDistance !== null) {
+      return leftDistance - rightDistance || left.id.localeCompare(right.id);
+    }
+
+    if (leftDistance !== null) {
+      return -1;
+    }
+
+    if (rightDistance !== null) {
+      return 1;
+    }
+
+    return (
+      (right.timestamp ?? 0) - (left.timestamp ?? 0) ||
+      left.id.localeCompare(right.id)
+    );
+  });
+}
+
+function getRouteVehicleBadge(vehicle: RouteVehicle) {
+  const label = vehicle.label ?? vehicle.vehicleId ?? vehicle.id;
+
+  return label.slice(0, 3).toLocaleUpperCase("it-IT");
+}
+
+function RouteVehicleSkeletonList() {
+  return (
+    <View className="gap-2">
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
+        <View
+          className="bg-card flex-row items-center gap-3 rounded-2xl p-3"
+          key={item}
+        >
+          <View className="bg-muted h-10 w-12 rounded-full opacity-70" />
+          <View className="min-w-0 flex-1 gap-2">
+            <View className="bg-muted h-4 w-28 rounded-full opacity-70" />
+            <View className="bg-muted h-3 w-40 rounded-full opacity-50" />
+          </View>
+          <View className="bg-muted h-5 w-5 rounded-full opacity-60" />
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function getRouteVehicleLabel(vehicle: RouteVehicle) {
+  return vehicle.label ?? vehicle.vehicleId ?? vehicle.id;
+}
+
+function getRouteVehicleDetail(
+  vehicle: RouteVehicle,
+  t: Translate,
+  userLocation: Coordinates | null,
+) {
+  const details: string[] = [];
+  const distanceMeters = getRouteVehicleDistanceMeters(vehicle, userLocation);
+
+  if (distanceMeters !== null) {
+    details.push(
+      t("home.drawer.lineDetail.distanceAway", {
+        distance: formatVehicleDistance(distanceMeters),
+      }),
+    );
+  }
+
+  if (vehicle.currentStopSequence !== null) {
+    details.push(
+      t("home.drawer.lineDetail.stopSequence", {
+        sequence: vehicle.currentStopSequence,
+      }),
+    );
+  }
+
+  return details.length > 0
+    ? details.join(" · ")
+    : t("home.drawer.lineDetail.liveVehicle");
+}
+
+function getRouteVehicleDistanceMeters(
+  vehicle: RouteVehicle,
+  userLocation: Coordinates | null,
+) {
+  if (!userLocation || !hasFiniteCoordinate(userLocation)) {
+    return null;
+  }
+
+  return getDistanceMeters(userLocation, {
+    latitude: vehicle.lat,
+    longitude: vehicle.lon,
+  });
+}
+
+function hasFiniteCoordinate(coordinates: Coordinates): coordinates is LatLon {
+  return (
+    Number.isFinite(coordinates.latitude) &&
+    Number.isFinite(coordinates.longitude)
+  );
+}
+
+function getDistanceMeters(from: LatLon, to: LatLon) {
+  const earthRadiusMeters = 6_371_000;
+  const fromLatitudeRadians = toRadians(from.latitude);
+  const toLatitudeRadians = toRadians(to.latitude);
+  const latitudeDelta = toRadians(to.latitude - from.latitude);
+  const longitudeDelta = toRadians(to.longitude - from.longitude);
+  const haversine =
+    Math.sin(latitudeDelta / 2) ** 2 +
+    Math.cos(fromLatitudeRadians) *
+      Math.cos(toLatitudeRadians) *
+      Math.sin(longitudeDelta / 2) ** 2;
+
+  return (
+    earthRadiusMeters *
+    2 *
+    Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine))
+  );
+}
+
+function toRadians(value: number) {
+  return (value * Math.PI) / 180;
+}
+
+function formatVehicleDistance(distanceMeters: number) {
+  if (distanceMeters >= 1_000) {
+    return `${(distanceMeters / 1_000).toFixed(distanceMeters >= 10_000 ? 0 : 1)} km`;
+  }
+
+  return `${Math.max(1, Math.round(distanceMeters))} m`;
+}
+
+function StopServiceAlertList({
+  alerts,
+  isLoading,
+}: {
+  alerts: ServiceAlert[];
+  isLoading: boolean;
+}) {
+  return <HighSeverityServiceAlertList alerts={alerts} isLoading={isLoading} />;
+}
+
+function HighSeverityServiceAlertList({
+  alerts,
+  isLoading,
+}: {
+  alerts: ServiceAlert[];
+  isLoading: boolean;
+}) {
+  const { t } = useTranslation();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const highSeverityAlerts = useMemo(
+    () => sortServiceAlerts(alerts).filter(isHighSeverityAlert),
+    [alerts],
+  );
+  const visibleAlerts = isExpanded
+    ? highSeverityAlerts
+    : highSeverityAlerts.slice(0, 1);
+  const hiddenCount = highSeverityAlerts.length - visibleAlerts.length;
+
+  if (isLoading) {
+    return <ServiceAlertSkeleton />;
+  }
+
+  if (highSeverityAlerts.length === 0) {
+    return null;
+  }
+
+  return (
+    <View className="gap-2">
+      {visibleAlerts.map((alert) => (
+        <ServiceAlertCard alert={alert} key={alert.id} />
+      ))}
+      {hiddenCount > 0 ? (
+        <Pressable
+          accessibilityRole="button"
+          className="self-start rounded-full px-1 py-1 active:opacity-75"
+          onPress={() => {
+            setIsExpanded(true);
+          }}
+        >
+          <Text className="text-primary font-sans text-sm font-bold">
+            {t("home.drawer.alerts.showMore", { count: hiddenCount })}
+          </Text>
+        </Pressable>
+      ) : null}
+      <Text className="text-muted-foreground px-1 font-sans text-xs">
+        {t("home.drawer.alerts.source")}
+      </Text>
+    </View>
+  );
+}
+
+function isHighSeverityAlert(alert: ServiceAlert) {
+  return (alert.severityLevel ?? 0) >= 3;
+}
+
+function sortServiceAlerts(alerts: ServiceAlert[]) {
+  return [...alerts].sort(
+    (left, right) =>
+      (right.severityLevel ?? 0) - (left.severityLevel ?? 0) ||
+      right.lastSeenAt.localeCompare(left.lastSeenAt) ||
+      left.id.localeCompare(right.id),
+  );
+}
+
+function ServiceAlertSkeleton() {
+  return (
+    <View className="border-border bg-card flex-row items-start gap-3 rounded-2xl border p-3">
+      <View className="bg-muted h-5 w-5 rounded-full opacity-70" />
+      <View className="min-w-0 flex-1 gap-2">
+        <View className="bg-muted h-4 w-40 rounded-full opacity-70" />
+        <View className="bg-muted h-3 w-full rounded-full opacity-50" />
+      </View>
+    </View>
+  );
+}
+
+function ServiceAlertCard({ alert }: { alert: ServiceAlert }) {
+  const { t } = useTranslation();
+  const style = getServiceAlertStyle(alert.severityLevel);
+  const title = alert.title || t("home.drawer.alerts.title");
+  const description = alert.description;
+
+  return (
+    <View
+      className={`flex-row items-start gap-3 rounded-2xl border p-3 ${style.containerClassName}`}
+    >
+      <SymbolView
+        name={{ ios: style.iconName, android: "warning" }}
+        size={18}
+        tintColor={style.iconColor}
+      />
+      <View className="min-w-0 flex-1 gap-1">
+        <Text className={`font-sans text-sm font-bold ${style.titleClassName}`}>
+          {title}
+        </Text>
+        {description ? (
+          <Text className={`font-sans text-sm ${style.bodyClassName}`}>
+            {description}
+          </Text>
+        ) : null}
+      </View>
+    </View>
+  );
+}
+
+function getServiceAlertStyle(severityLevel: number | null) {
+  if (severityLevel === 4) {
+    return {
+      bodyClassName: "text-red-900 dark:text-red-100",
+      containerClassName:
+        "border-red-300 bg-red-100 dark:border-red-700 dark:bg-red-950",
+      iconColor: "#dc2626",
+      iconName: "exclamationmark.octagon.fill" as const,
+      titleClassName: "text-red-950 dark:text-red-50",
+    };
+  }
+
+  if (severityLevel === 2) {
+    return {
+      bodyClassName: "text-blue-900 dark:text-blue-100",
+      containerClassName:
+        "border-blue-300 bg-blue-100 dark:border-blue-700 dark:bg-blue-950",
+      iconColor: "#2563eb",
+      iconName: "info.circle.fill" as const,
+      titleClassName: "text-blue-950 dark:text-blue-50",
+    };
+  }
+
+  return {
+    bodyClassName: "text-amber-900 dark:text-amber-100",
+    containerClassName:
+      "border-amber-300 bg-amber-100 dark:border-amber-700 dark:bg-amber-900",
+    iconColor: "#d97706",
+    iconName: "exclamationmark.triangle.fill" as const,
+    titleClassName: "text-amber-950 dark:text-amber-50",
+  };
 }
 
 function ArrivalDetailRow({ arrival }: { arrival: DisplayArrival }) {
@@ -550,7 +1080,9 @@ function ArrivalDetailRow({ arrival }: { arrival: DisplayArrival }) {
         <View className="min-w-0 flex-1 gap-1">
           <Text
             className={`font-sans text-lg font-bold ${
-              arrival.isRealtime ? "text-green-950" : "text-foreground"
+              arrival.isRealtime
+                ? "text-green-950 dark:text-green-50"
+                : "text-foreground"
             }`}
             numberOfLines={1}
           >
@@ -558,7 +1090,9 @@ function ArrivalDetailRow({ arrival }: { arrival: DisplayArrival }) {
           </Text>
           <Text
             className={`font-sans text-sm ${
-              arrival.isRealtime ? "text-green-800" : "text-muted-foreground"
+              arrival.isRealtime
+                ? "text-green-800 dark:text-green-200"
+                : "text-muted-foreground"
             }`}
             numberOfLines={1}
           >
@@ -569,7 +1103,9 @@ function ArrivalDetailRow({ arrival }: { arrival: DisplayArrival }) {
         </View>
         <Text
           className={`font-sans text-base font-bold tabular-nums ${
-            arrival.isRealtime ? "text-green-950" : "text-foreground"
+            arrival.isRealtime
+              ? "text-green-950 dark:text-green-50"
+              : "text-foreground"
           }`}
           numberOfLines={1}
         >
@@ -643,6 +1179,7 @@ function RealtimeArrivalLegend() {
 function RealtimeDataAlert({ type }: { type: "pending" | "stale" }) {
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
+  const iconColor = getWarningForegroundColor(colorScheme);
 
   const label =
     type === "pending"
@@ -651,11 +1188,17 @@ function RealtimeDataAlert({ type }: { type: "pending" | "stale" }) {
 
   return (
     <View className="flex-row items-start gap-3 rounded-2xl border border-amber-300 bg-amber-100 p-3 dark:border-amber-700 dark:bg-amber-900">
-      <SymbolView
-        name={{ ios: "exclamationmark.triangle.fill", android: "warning" }}
-        size={18}
-        tintColor={getWarningForegroundColor(colorScheme)}
-      />
+      <View className="h-4.5 w-4.5 items-center justify-center">
+        {type === "pending" ? (
+          <ActivityIndicator color={iconColor} size="small" />
+        ) : (
+          <SymbolView
+            name={{ ios: "exclamationmark.triangle.fill", android: "warning" }}
+            size={18}
+            tintColor={iconColor}
+          />
+        )}
+      </View>
       <Text className="min-w-0 flex-1 font-sans text-sm font-semibold text-amber-950 dark:text-amber-50">
         {label}
       </Text>
@@ -681,7 +1224,7 @@ function ArrivalLineCard({
         onPress={onPress}
       >
         <View
-          className="h-9 min-w-10 items-center justify-center rounded-full px-2"
+          className="h-9 w-9 items-center justify-center rounded-full px-2"
           style={{
             backgroundColor: normalizeRouteColor(group.color),
           }}
@@ -782,7 +1325,9 @@ function ArrivalPill({
     >
       <Text
         className={`font-sans text-sm font-bold tabular-nums ${
-          arrival.isRealtime ? "text-green-950" : "text-foreground"
+          arrival.isRealtime
+            ? "text-green-950 dark:text-green-50"
+            : "text-foreground"
         }`}
         numberOfLines={1}
       >
@@ -790,7 +1335,9 @@ function ArrivalPill({
       </Text>
       <Text
         className={`font-sans text-xs ${
-          arrival.isRealtime ? "text-green-800" : "text-muted-foreground"
+          arrival.isRealtime
+            ? "text-green-800 dark:text-green-200"
+            : "text-muted-foreground"
         }`}
         numberOfLines={1}
       >
@@ -803,7 +1350,7 @@ function ArrivalPill({
 function ArrivalSkeletonList() {
   return (
     <>
-      {[0, 1, 2].map((item) => (
+      {[0, 1, 2, 3, 4, 5, 6, 7].map((item) => (
         <View className="bg-card gap-3 rounded-2xl p-4" key={item}>
           <View className="flex-row items-center gap-3">
             <View className="bg-muted h-9 w-12 rounded-full opacity-70" />
@@ -844,6 +1391,7 @@ function getNearestLiveVehicle(
     id: arrival.vehicleId ?? arrival.tripId,
     routeLabel: group.label,
     routeType: group.routeType,
+    tripId: arrival.tripId,
   };
 }
 

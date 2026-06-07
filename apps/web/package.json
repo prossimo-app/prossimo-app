@@ -16,6 +16,7 @@
   "dependencies": {
     "@base-ui/react": "^1.5.0",
     "@c15t/nextjs": "^2.1.0",
+    "@phosphor-icons/react": "^2.1.10",
     "@prossimo-app/localization": "workspace:*",
     "motion": "^12.40.0",
     "next": "16.2.7",

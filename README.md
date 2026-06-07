@@ -8,7 +8,13 @@ It is built for people who want a faster, clearer way to see what is coming next
 
 I started Prossimo because I was not happy with the existing tools. This project is my attempt to build the transit experience I actually want to use every day.
 
-## Project Structure
+## Always open source
+
+Prossimo is open source because better local transport tools should be easier to inspect, improve, and adapt. Contributions are welcome.
+
+The project is licensed under MIT. If you want to contribute, start with [CONTRIBUTING.md](./CONTRIBUTING.md), open an issue, or send a focused pull request.
+
+## Project structure
 
 ```text
 apps/       Product apps and services
@@ -20,6 +26,8 @@ tooling/    Shared linting, formatting, TypeScript, and Tailwind configuration
 
 ```bash
 pnpm install
+cp .env.example .env
+pnpm db:dev:start
 pnpm dev
 ```
 
@@ -32,13 +40,15 @@ pnpm typecheck
 pnpm format
 ```
 
-## Funding
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) before opening a pull request.
+
+## Donate
 
 If Prossimo is useful to you, you can support the project through GitHub Sponsors:
 
 [Sponsor EgeOnder](https://github.com/sponsors/EgeOnder)
-
-Funding is also configured in `.github/FUNDING.yml`, so GitHub can show the sponsor button on the repository.
 
 ## License
 

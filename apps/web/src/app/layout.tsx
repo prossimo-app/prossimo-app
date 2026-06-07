@@ -4,7 +4,8 @@ import { cookies, headers } from "next/headers";
 
 import "./globals.css";
 
-import { ConsentManager } from "~/components/consent-manager";
+// TODO: Add later
+// import { ConsentManager } from "~/components/consent-manager";
 import { languageCookieName } from "~/utils/language-cookie";
 import { resolveRequestLanguage } from "./request-language";
 
@@ -148,7 +149,7 @@ export default async function RootLayout({
       className={`${instrumentSans.variable} ${instrumentSerif.variable} h-full antialiased`}
     >
       <body className="bg-background selection:bg-secondary flex min-h-full flex-col">
-        <ConsentManager>{children}</ConsentManager>
+        {children}
       </body>
     </html>
   );

@@ -1,3 +1,4 @@
+import type { Coordinates } from "expo-maps";
 import type { ComponentProps, RefObject } from "react";
 import type { TextInput } from "react-native";
 import { useCallback, useEffect, useState } from "react";
@@ -11,6 +12,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 
 import { useTranslation } from "@prossimo-app/localization";
@@ -19,19 +21,27 @@ import type {
   ArrivalGroup,
   DrawerDragHandleProps,
   DrawerNearbyStop,
+  RouteVehicle,
+  RouteVehiclesPayload,
+  ServiceAlert,
+  TrackedTransitVehicle,
 } from "./types";
 import type { SelectedStop } from "~/components/home-map";
 import type { TransitLine } from "~/components/transit-line-row";
 import { SearchInput } from "~/components/search-input";
 import { TransitLineRow } from "~/components/transit-line-row";
+import { getLastUpdatedDisplay } from "./arrival-model";
 import {
   ArrivalLineDetail,
   SelectedStopDrawerContent,
 } from "./selected-stop-drawer-content";
 
 interface DefaultDrawerContentProps extends DrawerDragHandleProps {
+  currentTimeMs: number;
   hasMoreLines: boolean;
+  hasTodayStrike: boolean;
   isLoadingMoreLines: boolean;
+  location?: Coordinates | null;
   lines: TransitLine[];
   nearbyRadiusMeters: number;
   nearbyStops: DrawerNearbyStop[];
@@ -41,6 +51,8 @@ interface DefaultDrawerContentProps extends DrawerDragHandleProps {
   onSearchFocus: () => void;
   onLineBack: () => void;
   onLoadMoreLines: () => void;
+  onRouteVehiclePress?: (vehicle: RouteVehicle) => void;
+  onStopFollowingVehicle?: () => void;
   onShowLocationTutorial: () => void;
   onStopArrivalScroll: ComponentProps<
     typeof SelectedStopDrawerContent
@@ -56,13 +68,16 @@ interface DefaultDrawerContentProps extends DrawerDragHandleProps {
   onStopTrackedVehicleChange: ComponentProps<
     typeof SelectedStopDrawerContent
   >["onTrackedVehicleChange"];
+  routeVehiclesPayload?: RouteVehiclesPayload | null;
   searchInputRef: RefObject<TextInput | null>;
   searchQuery: string;
   searchResults: DrawerNearbyStop[];
   scrollBottomPadding: number;
   stopDetail: {
+    alerts: ServiceAlert[];
     arrivalGroups: ArrivalGroup[];
     isOpen: boolean;
+    isLoadingAlerts: boolean;
     isLastUpdatedRefreshing: boolean;
     isRealtimeDataPending: boolean;
     isRealtimeDataStale: boolean;
@@ -70,11 +85,15 @@ interface DefaultDrawerContentProps extends DrawerDragHandleProps {
     lastUpdatedAt: string | null;
     selectedStop: SelectedStop | null;
   };
+  trackedVehicle?: TrackedTransitVehicle | null;
 }
 
 export function DefaultDrawerContent({
+  currentTimeMs,
   hasMoreLines,
+  hasTodayStrike,
   isLoadingMoreLines,
+  location = null,
   lines,
   nearbyRadiusMeters,
   nearbyStops,
@@ -84,6 +103,8 @@ export function DefaultDrawerContent({
   onSearchFocus,
   onLineBack,
   onLoadMoreLines,
+  onRouteVehiclePress,
+  onStopFollowingVehicle,
   onShowLocationTutorial,
   onStopArrivalScroll,
   onStopBack,
@@ -94,11 +115,13 @@ export function DefaultDrawerContent({
   onStopSelectedLineChange,
   onStopTrackedVehicleChange,
   panHandlers,
+  routeVehiclesPayload = null,
   searchInputRef,
   searchQuery,
   searchResults,
   scrollBottomPadding,
   stopDetail,
+  trackedVehicle = null,
 }: DefaultDrawerContentProps) {
   const { t } = useTranslation();
   const [pageTransition] = useState(() => new Animated.Value(0));
@@ -109,6 +132,21 @@ export function DefaultDrawerContent({
   const isSearching = searchQuery.trim().length > 0;
   const displayedStops = isSearching ? searchResults : nearbyStops;
   const displayedStopDetail = stopDetail.selectedStop ?? selectedStop;
+  const selectedLineRouteVehiclesPayload =
+    selectedLine && routeVehiclesPayload?.routeId === selectedLine.routeId
+      ? routeVehiclesPayload
+      : null;
+  const selectedLineRouteVehiclesFetchedAt =
+    selectedLineRouteVehiclesPayload?.fetchedAt ?? null;
+  const selectedLineRouteVehiclesFetchedAtMs =
+    selectedLineRouteVehiclesFetchedAt
+      ? Date.parse(selectedLineRouteVehiclesFetchedAt)
+      : Number.NaN;
+  const isSelectedLineRouteVehiclesStale =
+    Number.isFinite(selectedLineRouteVehiclesFetchedAtMs) &&
+    currentTimeMs - selectedLineRouteVehiclesFetchedAtMs > 60_000;
+  const isSelectedLineRouteVehiclesPending =
+    !selectedLineRouteVehiclesFetchedAt;
   const animatePageTransition = useCallback(
     (toValue: number, onComplete?: () => void) => {
       Animated.timing(pageTransition, {
@@ -209,6 +247,7 @@ export function DefaultDrawerContent({
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          {hasTodayStrike ? <TodayStrikeAlert /> : null}
           <View className="flex-row items-center gap-2 px-1">
             <Text className="text-foreground flex-1 font-sans text-base font-bold">
               {isSearching
@@ -332,9 +371,12 @@ export function DefaultDrawerContent({
             emptyMessage={t("home.drawer.lineDetail.empty")}
             group={createArrivalGroupFromLine(selectedLine)}
             isLastUpdatedRefreshing={false}
-            isRealtimeDataPending={false}
-            isRealtimeDataStale={false}
-            lastUpdatedDisplay={null}
+            isRealtimeDataPending={isSelectedLineRouteVehiclesPending}
+            isRealtimeDataStale={isSelectedLineRouteVehiclesStale}
+            lastUpdatedDisplay={getLastUpdatedDisplay(
+              selectedLineRouteVehiclesFetchedAt,
+              t,
+            )}
             onBack={() => {
               pageTransition.stopAnimation();
               onLineBack();
@@ -349,10 +391,16 @@ export function DefaultDrawerContent({
                 setSelectedLine(null);
               });
             }}
+            onRouteVehiclePress={onRouteVehiclePress}
             onScroll={noop}
+            onStopFollowingVehicle={onStopFollowingVehicle}
             panHandlers={panHandlers}
+            routeVehicles={selectedLineRouteVehiclesPayload?.vehicles ?? []}
             scrollBottomPadding={scrollBottomPadding}
+            showArrivalDetails={false}
             stopName={null}
+            trackedVehicleId={trackedVehicle?.id ?? null}
+            userLocation={location}
           />
         </Animated.View>
       ) : null}
@@ -363,8 +411,10 @@ export function DefaultDrawerContent({
           style={[styles.page, detailPageAnimatedStyle]}
         >
           <SelectedStopDrawerContent
+            alerts={stopDetail.alerts}
             arrivalGroups={stopDetail.arrivalGroups}
             isLoading={stopDetail.isLoading}
+            isLoadingAlerts={stopDetail.isLoadingAlerts}
             isLastUpdatedRefreshing={stopDetail.isLastUpdatedRefreshing}
             isRealtimeDataPending={stopDetail.isRealtimeDataPending}
             isRealtimeDataStale={stopDetail.isRealtimeDataStale}
@@ -388,6 +438,7 @@ export function DefaultDrawerContent({
             searchInputRef={searchInputRef}
             scrollBottomPadding={scrollBottomPadding}
             stopCode={displayedStopDetail.stopCode}
+            stopId={displayedStopDetail.stopId}
             stopName={displayedStopDetail.stopName}
           />
         </Animated.View>
@@ -420,6 +471,44 @@ const styles = StyleSheet.create({
     top: 0,
   },
 });
+
+function TodayStrikeAlert() {
+  const { t } = useTranslation();
+
+  return (
+    <Pressable
+      accessibilityRole="button"
+      className="flex-row items-center gap-3 rounded-2xl bg-red-50 px-4 py-3.5 active:opacity-80 dark:bg-red-950/40"
+      onPress={() => {
+        router.push("/news");
+      }}
+    >
+      <View className="h-10 w-10 items-center justify-center rounded-full bg-red-500">
+        <SymbolView
+          name={{ ios: "exclamationmark.triangle.fill", android: "warning" }}
+          size={20}
+          tintColor="white"
+        />
+      </View>
+      <View className="min-w-0 flex-1">
+        <Text className="font-sans text-sm font-bold text-red-600 dark:text-red-400">
+          {t("home.drawer.strikeAlert.title")}
+        </Text>
+        <Text
+          className="font-sans text-xs text-red-600/80 dark:text-red-400/80"
+          numberOfLines={2}
+        >
+          {t("home.drawer.strikeAlert.description")}
+        </Text>
+      </View>
+      <SymbolView
+        name={{ ios: "chevron.forward", android: "chevron_right" }}
+        size={14}
+        tintColor="#dc2626"
+      />
+    </Pressable>
+  );
+}
 
 function StopRow({
   onPress,

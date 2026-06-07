@@ -29,10 +29,32 @@ interface RunningJob {
   timeout: NodeJS.Timeout | null;
 }
 
-function formatError(error: unknown) {
-  return error instanceof Error
-    ? (error.stack ?? error.message)
-    : String(error);
+function getErrorMetadata(error: Error) {
+  const metadata = error as {
+    code?: unknown;
+    detail?: unknown;
+    hint?: unknown;
+  };
+  const parts = [
+    typeof metadata.code === "string" ? `code=${metadata.code}` : null,
+    typeof metadata.detail === "string" ? `detail=${metadata.detail}` : null,
+    typeof metadata.hint === "string" ? `hint=${metadata.hint}` : null,
+  ].filter((part): part is string => Boolean(part));
+
+  return parts.length > 0 ? `\n${parts.join("\n")}` : "";
+}
+
+function formatError(error: unknown): string {
+  if (!(error instanceof Error)) {
+    return String(error);
+  }
+
+  const cause =
+    "cause" in error && error.cause
+      ? `\nCaused by: ${formatError(error.cause)}`
+      : "";
+
+  return `${error.stack ?? error.message}${getErrorMetadata(error)}${cause}`;
 }
 
 function getWorkerEnvironment() {

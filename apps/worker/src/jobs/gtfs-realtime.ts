@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 
+import type { ObservedTopic } from "@prossimo-app/api";
 import type {
   GtfsRealtimeAlert,
   GtfsRealtimeTripUpdate,
@@ -42,7 +43,7 @@ const GTFS_REALTIME_FEEDS = {
     path: "alerts.aspx",
   },
   tripUpdates: {
-    intervalMs: 30 * 1000,
+    intervalMs: 15 * 1000,
     name: "trip-updates",
     path: "trip_update.aspx",
   },
@@ -78,6 +79,25 @@ interface StopArrivalsPayload {
   }[];
   fetchedAt: string;
   stopId: string;
+}
+
+interface RouteVehiclesPayload {
+  fetchedAt: string;
+  routeId: string;
+  vehicles: {
+    bearing: number | null;
+    currentStopSequence: number | null;
+    id: string;
+    label: string | null;
+    lat: number;
+    lon: number;
+    routeId: string | null;
+    speed: number | null;
+    stopId: string | null;
+    timestamp: number | null;
+    tripId: string | null;
+    vehicleId: string | null;
+  }[];
 }
 
 interface StaticStopTimeRow {
@@ -119,6 +139,16 @@ interface AlertImportResult {
   prunedAlerts: number;
   skippedReason: "no-db" | null;
   upsertedAlerts: number;
+}
+
+interface ObservedRouteVehiclesCacheResult {
+  activeTopics: number;
+  routeTopics: number;
+  skippedReason: "no-active-route-topics" | "no-redis" | null;
+  topics: string[];
+  updatedTopics: number;
+  vehiclePositions: number;
+  writtenVehicles: number;
 }
 
 let redisClient: ReturnType<typeof createRedisClientFromEnv> | null | undefined;
@@ -199,7 +229,13 @@ async function fetchWithTimeout(url: string, signal: AbortSignal) {
   }
 }
 
-async function cacheActiveStopArrivals({ fetchedAt }: { fetchedAt: string }) {
+async function cacheActiveStopArrivals({
+  activeTopics,
+  fetchedAt,
+}: {
+  activeTopics?: ObservedTopic[];
+  fetchedAt: string;
+}) {
   const redis = getRedisClient();
 
   if (!redis) {
@@ -208,14 +244,14 @@ async function cacheActiveStopArrivals({ fetchedAt }: { fetchedAt: string }) {
     });
   }
 
-  const activeTopics = await getActiveObservedTopics(redis);
-  const stopTopics = activeTopics.filter((topic) => topic.type === "stop");
+  const topics = activeTopics ?? (await getActiveObservedTopics(redis));
+  const stopTopics = topics.filter((topic) => topic.type === "stop");
 
   if (stopTopics.length === 0) {
     return createObservedStopArrivalCacheResult({
-      activeTopics: activeTopics.length,
+      activeTopics: topics.length,
       skippedReason: "no-active-stop-topics",
-      topics: activeTopics.map((topic) => `${topic.type}:${topic.id}`),
+      topics: topics.map((topic) => `${topic.type}:${topic.id}`),
     });
   }
 
@@ -236,7 +272,7 @@ async function cacheActiveStopArrivals({ fetchedAt }: { fetchedAt: string }) {
     }
 
     return createObservedStopArrivalCacheResult({
-      activeTopics: activeTopics.length,
+      activeTopics: topics.length,
       skippedReason: "no-trip-updates",
       stopTopics: stopTopics.length,
       topics: stopTopics.map((topic) => `${topic.type}:${topic.id}`),
@@ -276,13 +312,76 @@ async function cacheActiveStopArrivals({ fetchedAt }: { fetchedAt: string }) {
   }
 
   return createObservedStopArrivalCacheResult({
-    activeTopics: activeTopics.length,
+    activeTopics: topics.length,
     staticStopTimeMatches: staticStopTimesByTripAndSequence.size,
     stopTopics: stopTopics.length,
     topics: stopTopics.map((topic) => `${topic.type}:${topic.id}`),
     tripUpdates: latestTripUpdates.length,
     updatedTopics,
     writtenArrivals,
+  });
+}
+
+async function cacheActiveRouteVehicles({
+  activeTopics,
+  fetchedAt,
+  vehiclePositions,
+}: {
+  activeTopics?: ObservedTopic[];
+  fetchedAt: string;
+  vehiclePositions: GtfsRealtimeVehiclePosition[];
+}) {
+  const redis = getRedisClient();
+
+  if (!redis) {
+    return createObservedRouteVehiclesCacheResult({
+      skippedReason: "no-redis",
+      vehiclePositions: vehiclePositions.length,
+    });
+  }
+
+  const topics = activeTopics ?? (await getActiveObservedTopics(redis));
+  const routeTopics = topics.filter((topic) => topic.type === "route");
+
+  if (routeTopics.length === 0) {
+    return createObservedRouteVehiclesCacheResult({
+      activeTopics: topics.length,
+      skippedReason: "no-active-route-topics",
+      topics: topics.map((topic) => `${topic.type}:${topic.id}`),
+      vehiclePositions: vehiclePositions.length,
+    });
+  }
+
+  const routeIdsByTripId = indexRouteIdsByTripId(latestTripUpdates);
+  const tripUpdatesByTripId = indexTripUpdatesByTripId(latestTripUpdates);
+  let updatedTopics = 0;
+  let writtenVehicles = 0;
+
+  for (const topic of routeTopics) {
+    const routePayload = deriveRouteVehicles({
+      fetchedAt,
+      routeId: topic.id,
+      routeIdsByTripId,
+      tripUpdatesByTripId,
+      vehiclePositions,
+    });
+
+    await cacheAndPublishTopicPayload({
+      payload: routePayload,
+      redis,
+      topic,
+    });
+    updatedTopics += 1;
+    writtenVehicles += routePayload.vehicles.length;
+  }
+
+  return createObservedRouteVehiclesCacheResult({
+    activeTopics: topics.length,
+    routeTopics: routeTopics.length,
+    topics: routeTopics.map((topic) => `${topic.type}:${topic.id}`),
+    updatedTopics,
+    vehiclePositions: vehiclePositions.length,
+    writtenVehicles,
   });
 }
 
@@ -298,6 +397,20 @@ function createObservedStopArrivalCacheResult(
     tripUpdates: values.tripUpdates ?? latestTripUpdates.length,
     updatedTopics: values.updatedTopics ?? 0,
     writtenArrivals: values.writtenArrivals ?? 0,
+  };
+}
+
+function createObservedRouteVehiclesCacheResult(
+  values: Partial<ObservedRouteVehiclesCacheResult> = {},
+): ObservedRouteVehiclesCacheResult {
+  return {
+    activeTopics: values.activeTopics ?? 0,
+    routeTopics: values.routeTopics ?? 0,
+    skippedReason: values.skippedReason ?? null,
+    topics: values.topics ?? [],
+    updatedTopics: values.updatedTopics ?? 0,
+    vehiclePositions: values.vehiclePositions ?? 0,
+    writtenVehicles: values.writtenVehicles ?? 0,
   };
 }
 
@@ -425,6 +538,20 @@ async function hasActiveStopTopics() {
   return activeTopics.some((topic) => topic.type === "stop");
 }
 
+async function hasActiveStopOrRouteTopics() {
+  const redis = getRedisClient();
+
+  if (!redis) {
+    return false;
+  }
+
+  const activeTopics = await getActiveObservedTopics(redis);
+
+  return activeTopics.some(
+    (topic) => topic.type === "stop" || topic.type === "route",
+  );
+}
+
 function deriveStopArrivals({
   fetchedAt,
   staticStopTimesByTripAndSequence,
@@ -459,6 +586,8 @@ function deriveStopArrivals({
         continue;
       }
 
+      const vehiclePosition = vehiclePositionsByTripId.get(tripId);
+
       arrivals.push({
         arrivalTime: stopTimeUpdate.arrival?.time ?? null,
         departureTime: stopTimeUpdate.departure?.time ?? null,
@@ -478,8 +607,13 @@ function deriveStopArrivals({
         stopId,
         stopSequence: stopTimeUpdate.stopSequence,
         tripId,
-        vehiclePosition: vehiclePositionsByTripId.get(tripId)?.position ?? null,
-        vehicleId: tripUpdate.vehicle?.id ?? tripUpdate.vehicle?.label ?? null,
+        vehiclePosition: vehiclePosition?.position ?? null,
+        vehicleId:
+          tripUpdate.vehicle?.id ??
+          tripUpdate.vehicle?.label ??
+          vehiclePosition?.vehicle?.id ??
+          vehiclePosition?.vehicle?.label ??
+          null,
       });
     }
   }
@@ -494,6 +628,71 @@ function deriveStopArrivals({
     arrivals,
     fetchedAt,
     stopId,
+  };
+}
+
+function deriveRouteVehicles({
+  fetchedAt,
+  routeId,
+  routeIdsByTripId,
+  tripUpdatesByTripId,
+  vehiclePositions,
+}: {
+  fetchedAt: string;
+  routeId: string;
+  routeIdsByTripId: ReadonlyMap<string, string>;
+  tripUpdatesByTripId: ReadonlyMap<string, GtfsRealtimeTripUpdate>;
+  vehiclePositions: GtfsRealtimeVehiclePosition[];
+}): RouteVehiclesPayload {
+  const vehicles: RouteVehiclesPayload["vehicles"] = [];
+
+  for (const vehiclePosition of vehiclePositions) {
+    const tripId = vehiclePosition.trip?.tripId ?? null;
+    const matchedRouteId =
+      vehiclePosition.trip?.routeId ??
+      (tripId ? routeIdsByTripId.get(tripId) : null) ??
+      null;
+    const position = vehiclePosition.position;
+    const tripUpdate = tripId ? tripUpdatesByTripId.get(tripId) : null;
+    const vehicleId =
+      vehiclePosition.vehicle?.id ??
+      tripUpdate?.vehicle?.id ??
+      vehiclePosition.vehicle?.label ??
+      tripUpdate?.vehicle?.label ??
+      null;
+    const vehicleLabel =
+      vehiclePosition.vehicle?.label ?? tripUpdate?.vehicle?.label ?? null;
+
+    if (matchedRouteId !== routeId || !position) {
+      continue;
+    }
+
+    vehicles.push({
+      bearing: position.bearing,
+      currentStopSequence: vehiclePosition.currentStopSequence,
+      id: vehicleId ?? vehiclePosition.id,
+      label: vehicleLabel,
+      lat: position.lat,
+      lon: position.lon,
+      routeId: matchedRouteId,
+      speed: position.speed,
+      stopId: vehiclePosition.stopId,
+      timestamp: vehiclePosition.timestamp,
+      tripId,
+      vehicleId,
+    });
+  }
+
+  vehicles.sort(
+    (left, right) =>
+      (right.timestamp ?? 0) - (left.timestamp ?? 0) ||
+      left.id.localeCompare(right.id),
+  );
+
+  return {
+    fetchedAt,
+    routeId,
+    vehicles,
   };
 }
 
@@ -655,6 +854,35 @@ function indexVehiclePositionsByTripId(
   return nextVehiclePositionsByTripId;
 }
 
+function indexRouteIdsByTripId(tripUpdates: GtfsRealtimeTripUpdate[]) {
+  const routeIdsByTripId = new Map<string, string>();
+
+  for (const tripUpdate of tripUpdates) {
+    const tripId = tripUpdate.trip?.tripId;
+    const routeId = tripUpdate.trip?.routeId;
+
+    if (tripId && routeId) {
+      routeIdsByTripId.set(tripId, routeId);
+    }
+  }
+
+  return routeIdsByTripId;
+}
+
+function indexTripUpdatesByTripId(tripUpdates: GtfsRealtimeTripUpdate[]) {
+  const tripUpdatesByTripId = new Map<string, GtfsRealtimeTripUpdate>();
+
+  for (const tripUpdate of tripUpdates) {
+    const tripId = tripUpdate.trip?.tripId;
+
+    if (tripId) {
+      tripUpdatesByTripId.set(tripId, tripUpdate);
+    }
+  }
+
+  return tripUpdatesByTripId;
+}
+
 async function fetchGtfsRealtimeFeed({
   feedKey,
   signal,
@@ -674,30 +902,144 @@ async function fetchGtfsRealtimeFeed({
   const payload = Buffer.from(await response.arrayBuffer());
   const sha256Hash = createHash("sha256").update(payload).digest("hex");
   const fetchedAt = new Date().toISOString();
-  let observedTopics = { activeTopics: 0, updatedTopics: 0 };
+  const feedResult = {
+    byteLength: payload.byteLength,
+    contentType: response.headers.get("content-type"),
+    fetchedAt,
+    sha256Hash,
+    sourceUrl,
+  };
+  const observedTopics: {
+    routeVehicles: ObservedRouteVehiclesCacheResult | null;
+    stopArrivals: ObservedStopArrivalCacheResult | null;
+  } = { routeVehicles: null, stopArrivals: null };
   let importedAlerts: AlertImportResult | null = null;
   const shouldDeriveStopArrivals = await hasActiveStopTopics();
+  const shouldDeriveVehiclePositionTopics =
+    feedKey === "vehiclePositions" ? await hasActiveStopOrRouteTopics() : false;
 
-  if (feedKey === "vehiclePositions" && shouldDeriveStopArrivals) {
-    latestVehiclePositionsByTripId = indexVehiclePositionsByTripId(
-      parseGtfsRealtimeVehiclePositions(payload),
-    );
-    observedTopics = await cacheActiveStopArrivals({ fetchedAt });
+  if (feedKey === "vehiclePositions" && shouldDeriveVehiclePositionTopics) {
+    const vehiclePositions = parseGtfsRealtimeVehiclePositions(payload);
+
+    latestVehiclePositionsByTripId =
+      indexVehiclePositionsByTripId(vehiclePositions);
+    observedTopics.routeVehicles = await cacheActiveRouteVehicles({
+      fetchedAt,
+      vehiclePositions,
+    });
+
+    if (shouldDeriveStopArrivals) {
+      observedTopics.stopArrivals = await cacheActiveStopArrivals({
+        fetchedAt,
+      });
+    }
   } else if (feedKey === "tripUpdates" && shouldDeriveStopArrivals) {
     latestTripUpdates = parseGtfsRealtimeTripUpdates(payload);
-    observedTopics = await cacheActiveStopArrivals({ fetchedAt });
+    observedTopics.stopArrivals = await cacheActiveStopArrivals({ fetchedAt });
   } else if (feedKey === "alerts") {
     importedAlerts = await importGtfsRealtimeAlerts(payload);
   }
 
   return {
-    byteLength: payload.byteLength,
-    contentType: response.headers.get("content-type"),
-    fetchedAt,
+    ...feedResult,
     importedAlerts,
     observedTopics,
-    sha256Hash,
+  };
+}
+
+async function fetchGtfsRealtimeFeedPayload({
+  feedKey,
+  signal,
+}: {
+  feedKey: GtfsRealtimeFeedKey;
+  signal: AbortSignal;
+}) {
+  const sourceUrl = getFeedUrl(feedKey);
+  const response = await fetchWithTimeout(sourceUrl, signal);
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch GTT GTFS-RT ${GTFS_REALTIME_FEEDS[feedKey].name}: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  const payload = Buffer.from(await response.arrayBuffer());
+
+  return {
+    byteLength: payload.byteLength,
+    contentType: response.headers.get("content-type"),
+    feedKey,
+    payload,
+    sha256Hash: createHash("sha256").update(payload).digest("hex"),
     sourceUrl,
+  };
+}
+
+async function fetchGtfsRealtimeVehiclePositionsAndTripUpdates({
+  signal,
+}: {
+  signal: AbortSignal;
+}) {
+  const fetchedAt = new Date().toISOString();
+  const [vehiclePositionsFeed, tripUpdatesFeed] = await Promise.all([
+    fetchGtfsRealtimeFeedPayload({ feedKey: "vehiclePositions", signal }),
+    fetchGtfsRealtimeFeedPayload({ feedKey: "tripUpdates", signal }),
+  ]);
+  const vehiclePositions = parseGtfsRealtimeVehiclePositions(
+    vehiclePositionsFeed.payload,
+  );
+  const tripUpdates = parseGtfsRealtimeTripUpdates(tripUpdatesFeed.payload);
+  const redis = getRedisClient();
+  const activeTopics = redis ? await getActiveObservedTopics(redis) : [];
+  const shouldDeriveStopArrivals = activeTopics.some(
+    (topic) => topic.type === "stop",
+  );
+  const shouldDeriveRouteVehicles = activeTopics.some(
+    (topic) => topic.type === "route",
+  );
+  const observedTopics: {
+    routeVehicles: ObservedRouteVehiclesCacheResult | null;
+    stopArrivals: ObservedStopArrivalCacheResult | null;
+  } = { routeVehicles: null, stopArrivals: null };
+
+  latestTripUpdates = tripUpdates;
+  latestVehiclePositionsByTripId =
+    indexVehiclePositionsByTripId(vehiclePositions);
+
+  if (shouldDeriveRouteVehicles) {
+    observedTopics.routeVehicles = await cacheActiveRouteVehicles({
+      activeTopics,
+      fetchedAt,
+      vehiclePositions,
+    });
+  }
+
+  if (shouldDeriveStopArrivals) {
+    observedTopics.stopArrivals = await cacheActiveStopArrivals({
+      activeTopics,
+      fetchedAt,
+    });
+  }
+
+  return {
+    feeds: {
+      tripUpdates: {
+        byteLength: tripUpdatesFeed.byteLength,
+        contentType: tripUpdatesFeed.contentType,
+        sha256Hash: tripUpdatesFeed.sha256Hash,
+        sourceUrl: tripUpdatesFeed.sourceUrl,
+        tripUpdates: tripUpdates.length,
+      },
+      vehiclePositions: {
+        byteLength: vehiclePositionsFeed.byteLength,
+        contentType: vehiclePositionsFeed.contentType,
+        sha256Hash: vehiclePositionsFeed.sha256Hash,
+        sourceUrl: vehiclePositionsFeed.sourceUrl,
+        vehiclePositions: vehiclePositions.length,
+      },
+    },
+    fetchedAt,
+    observedTopics,
   };
 }
 
@@ -721,7 +1063,25 @@ function createGtfsRealtimeJob(feedKey: GtfsRealtimeFeedKey): ScheduledJob {
 }
 
 export const pollGttGtfsRealtimeVehiclePositionsJob =
-  createGtfsRealtimeJob("vehiclePositions");
-export const pollGttGtfsRealtimeTripUpdatesJob =
-  createGtfsRealtimeJob("tripUpdates");
+  createGtfsRealtimeVehiclePositionsAndTripUpdatesJob();
 export const pollGttGtfsRealtimeAlertsJob = createGtfsRealtimeJob("alerts");
+
+function createGtfsRealtimeVehiclePositionsAndTripUpdatesJob(): ScheduledJob {
+  return {
+    input: {
+      urls: {
+        tripUpdates: getFeedUrl("tripUpdates"),
+        vehiclePositions: getFeedUrl("vehiclePositions"),
+      },
+    },
+    name: "poll-gtt-gtfs-realtime-vehicle-positions-and-trip-updates",
+    run({ signal }: WorkerContext) {
+      return fetchGtfsRealtimeVehiclePositionsAndTripUpdates({ signal });
+    },
+    runOnStart: true,
+    schedule: {
+      intervalMs: GTFS_REALTIME_FEEDS.vehiclePositions.intervalMs,
+      type: "interval",
+    },
+  };
+}

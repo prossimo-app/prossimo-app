@@ -1,0 +1,38 @@
+name: Bug report
+description: Report something that is broken or confusing in Prossimo.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include the stop, line, route, screen, or action sequence when relevant.
+      placeholder: |
+        1. Open ...
+        2. Tap ...
+        3. See ...
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      placeholder: iOS, Android, web, API, worker, etc.
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      placeholder: App version, browser version, or commit SHA
+  - type: textarea
+    id: extra
+    attributes:
+      label: Extra context
+      description: Add screenshots, logs, or transit examples if useful.

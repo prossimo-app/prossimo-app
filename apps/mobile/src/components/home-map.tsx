@@ -12,6 +12,7 @@ import { toast } from "sonner-native";
 import { useTranslation } from "@prossimo-app/localization";
 
 import type {
+  RouteVehiclesPayload,
   SelectedTransitLine,
   TrackedTransitVehicle,
 } from "~/components/home-bottom-drawer/types";
@@ -108,8 +109,12 @@ export interface SelectedStop {
 
 interface HomeMapProps {
   onLocationChange?: (location: Coordinates | null) => void;
+  onRouteVehiclePress?: (
+    vehicle: RouteVehiclesPayload["vehicles"][number],
+  ) => void;
   onStopSelectionChange?: (stop: SelectedStop | null) => void;
   preserveSelectedStopOnLineDetail?: boolean;
+  routeVehiclesPayload?: RouteVehiclesPayload | null;
   selectedLine?: SelectedTransitLine | null;
   selectedStop?: SelectedStop | null;
   trackedVehicle?: TrackedTransitVehicle | null;
@@ -117,8 +122,10 @@ interface HomeMapProps {
 
 export function HomeMap({
   onLocationChange,
+  onRouteVehiclePress,
   onStopSelectionChange,
   preserveSelectedStopOnLineDetail = false,
+  routeVehiclesPayload = null,
   selectedLine = null,
   selectedStop = null,
   trackedVehicle = null,
@@ -164,6 +171,7 @@ export function HomeMap({
   const previousSelectedLineRouteIdRef = useRef<string | null>(
     selectedLine?.routeId ?? null,
   );
+  const trackedVehicleIdRef = useRef<string | null>(trackedVehicle?.id ?? null);
   const selectedStopCameraPositionRef = useRef<CameraPosition | null>(null);
   const selectedStopMarkerIdRef = useRef<string | null>(null);
   const ignoreMapClickUntilRef = useRef(0);
@@ -217,12 +225,19 @@ export function HomeMap({
     }
 
     if (trackedVehicle) {
+      const previousTrackedVehicleId = trackedVehicleIdRef.current;
+      trackedVehicleIdRef.current = trackedVehicle.id;
+      const zoom =
+        previousTrackedVehicleId === trackedVehicle.id &&
+        currentCameraPositionRef.current.zoom !== undefined
+          ? currentCameraPositionRef.current.zoom
+          : TRACKED_VEHICLE_MARKER_ZOOM;
       const coordinates = getCameraCenterForMarkerScreenPosition(
         trackedVehicle.coordinates,
         {
           screenHeight: windowHeight,
           screenY: TRACKED_VEHICLE_MARKER_SCREEN_Y,
-          zoom: TRACKED_VEHICLE_MARKER_ZOOM,
+          zoom,
         },
       );
       const cameraPosition = {
@@ -231,7 +246,7 @@ export function HomeMap({
             ? clampToTorino(coordinates)
             : coordinates,
         duration: getCameraAnimationDuration(),
-        zoom: TRACKED_VEHICLE_MARKER_ZOOM,
+        zoom,
       };
 
       mapRef?.setCameraPosition(cameraPosition);
@@ -244,6 +259,8 @@ export function HomeMap({
       });
       return;
     }
+
+    trackedVehicleIdRef.current = null;
 
     if (selectedLine) {
       return;
@@ -416,10 +433,13 @@ export function HomeMap({
     staleTime: Number.POSITIVE_INFINITY,
   });
   const shouldShowZoomWarning = isNearbyStopsQueryTooWide && !selectedLine;
+  const mapOverlayMessage = trackedVehicle
+    ? t("home.map.followingVehicle", { vehicle: trackedVehicle.id })
+    : t("home.map.zoomWarning");
   const mapOverlay = (
     <NearbyStopsZoomWarning
-      isVisible={shouldShowZoomWarning}
-      message={t("home.map.zoomWarning")}
+      isVisible={Boolean(trackedVehicle) || shouldShowZoomWarning}
+      message={mapOverlayMessage}
     />
   );
   const nearbyStops = useMemo(() => {
@@ -483,6 +503,33 @@ export function HomeMap({
       width: ROUTE_SHAPE_LINE_WIDTH,
     }));
   }, [activeFeedVersionId, routeShapesData, selectedLine]);
+  const routeVehicleMarkers = useMemo<TrackedTransitVehicle[]>(() => {
+    if (
+      !selectedLine ||
+      routeVehiclesPayload?.routeId !== selectedLine.routeId
+    ) {
+      return [];
+    }
+
+    return routeVehiclesPayload.vehicles
+      .filter(
+        (vehicle) =>
+          vehicle.id !== trackedVehicle?.id &&
+          (!trackedVehicle?.tripId || vehicle.tripId !== trackedVehicle.tripId),
+      )
+      .map((vehicle) => ({
+        bearing: vehicle.bearing,
+        color: selectedLine.color,
+        coordinates: {
+          latitude: vehicle.lat,
+          longitude: vehicle.lon,
+        },
+        id: vehicle.id,
+        routeLabel: selectedLine.routeLabel,
+        routeType: selectedLine.routeType,
+        timestamp: vehicle.timestamp,
+      }));
+  }, [routeVehiclesPayload, selectedLine, trackedVehicle]);
 
   useEffect(() => {
     if (trackedVehicle || routeShapePolylines.length === 0) {
@@ -541,6 +588,18 @@ export function HomeMap({
       title: marker.title,
     }));
 
+    for (const routeVehicle of routeVehicleMarkers) {
+      markers.push({
+        coordinates: routeVehicle.coordinates,
+        id: getRouteVehicleMarkerId(routeVehicle),
+        systemImage: getAppleVehicleSystemImage(routeVehicle.routeType),
+        tintColor: normalizeMapRouteColor(routeVehicle.color),
+        title: t("home.drawer.arrivals.line", {
+          line: routeVehicle.routeLabel,
+        }),
+      });
+    }
+
     if (trackedVehicle) {
       markers.push({
         coordinates: trackedVehicle.coordinates,
@@ -554,7 +613,7 @@ export function HomeMap({
     }
 
     return markers;
-  }, [t, trackedVehicle, visibleStopMarkers]);
+  }, [routeVehicleMarkers, t, trackedVehicle, visibleStopMarkers]);
   const googleMarkers = useMemo<GoogleMaps.Marker[]>(() => {
     const markers: GoogleMaps.Marker[] = visibleStopMarkers.map((marker) => ({
       anchor: marker.count > 1 ? { x: 0.5, y: 0.5 } : undefined,
@@ -574,6 +633,21 @@ export function HomeMap({
       zIndex: marker.count > 1 ? 2 : 1,
     }));
 
+    for (const routeVehicle of routeVehicleMarkers) {
+      markers.push({
+        anchor: { x: 0.5, y: 0.5 },
+        coordinates: routeVehicle.coordinates,
+        icon: vehicleIconsByKey.get(getTrackedVehicleIconKey(routeVehicle)),
+        id: getRouteVehicleMarkerId(routeVehicle),
+        showCallout: true,
+        snippet: undefined,
+        title: t("home.drawer.arrivals.line", {
+          line: routeVehicle.routeLabel,
+        }),
+        zIndex: 3,
+      });
+    }
+
     if (trackedVehicle) {
       markers.push({
         anchor: { x: 0.5, y: 0.5 },
@@ -592,6 +666,7 @@ export function HomeMap({
     return markers;
   }, [
     clusterIconsByCount,
+    routeVehicleMarkers,
     t,
     trackedVehicle,
     vehicleIconsByKey,
@@ -640,6 +715,15 @@ export function HomeMap({
       clearPendingMapDeselect(pendingMapDeselectTimeoutRef);
 
       if (selectedLine) {
+        const routeVehicleId = getRouteVehicleIdFromMarkerId(marker.id);
+        const routeVehicle = routeVehiclesPayload?.vehicles.find(
+          (vehicle) => vehicle.id === routeVehicleId,
+        );
+
+        if (routeVehicle) {
+          onRouteVehiclePress?.(routeVehicle);
+        }
+
         return;
       }
 
@@ -750,7 +834,9 @@ export function HomeMap({
     },
     [
       isMapLimitedToTorino,
+      onRouteVehiclePress,
       onStopSelectionChange,
+      routeVehiclesPayload,
       selectedLine,
       stopMarkers,
       windowHeight,
@@ -863,32 +949,40 @@ export function HomeMap({
   }, [clusterCounts, clusterIconsByCount]);
 
   useEffect(() => {
-    const vehicle = trackedVehicle;
-
-    if (!vehicle || Platform.OS !== "android") {
+    if (Platform.OS !== "android") {
       return;
     }
 
-    const iconKey = getTrackedVehicleIconKey(vehicle);
+    const vehicles = [
+      ...routeVehicleMarkers,
+      ...(trackedVehicle ? [trackedVehicle] : []),
+    ];
+    const missingVehicles = vehicles.filter(
+      (vehicle) => !vehicleIconsByKey.has(getTrackedVehicleIconKey(vehicle)),
+    );
 
-    if (vehicleIconsByKey.has(iconKey)) {
+    if (missingVehicles.length === 0) {
       return;
     }
 
-    const trackedVehicleForIcon: TrackedTransitVehicle = vehicle;
     let isMounted = true;
 
     async function loadVehicleIcon() {
-      const icon = await Image.loadAsync(
-        {
-          height: VEHICLE_MARKER_SIZE,
-          uri: createTransitVehicleMarkerDataUri(trackedVehicleForIcon),
-          width: VEHICLE_MARKER_SIZE,
-        },
-        {
-          maxHeight: VEHICLE_MARKER_SIZE,
-          maxWidth: VEHICLE_MARKER_SIZE,
-        },
+      const icons = await Promise.all(
+        missingVehicles.map(async (vehicle) => ({
+          icon: await Image.loadAsync(
+            {
+              height: VEHICLE_MARKER_SIZE,
+              uri: createTransitVehicleMarkerDataUri(vehicle),
+              width: VEHICLE_MARKER_SIZE,
+            },
+            {
+              maxHeight: VEHICLE_MARKER_SIZE,
+              maxWidth: VEHICLE_MARKER_SIZE,
+            },
+          ),
+          key: getTrackedVehicleIconKey(vehicle),
+        })),
       );
 
       if (!isMounted) {
@@ -897,7 +991,11 @@ export function HomeMap({
 
       setVehicleIconsByKey((currentIcons) => {
         const nextIcons = new Map(currentIcons);
-        nextIcons.set(iconKey, icon);
+
+        for (const { icon, key } of icons) {
+          nextIcons.set(key, icon);
+        }
+
         return nextIcons;
       });
     }
@@ -907,7 +1005,7 @@ export function HomeMap({
     return () => {
       isMounted = false;
     };
-  }, [trackedVehicle, vehicleIconsByKey]);
+  }, [routeVehicleMarkers, trackedVehicle, vehicleIconsByKey]);
 
   useEffect(() => {
     let isMounted = true;
@@ -1886,6 +1984,16 @@ function createClusterMarkerDataUri(count: number) {
 
 function getTrackedVehicleMarkerId(vehicle: TrackedTransitVehicle) {
   return `vehicle:${vehicle.id}`;
+}
+
+function getRouteVehicleMarkerId(vehicle: TrackedTransitVehicle) {
+  return `route-vehicle:${vehicle.id}`;
+}
+
+function getRouteVehicleIdFromMarkerId(markerId: string | undefined) {
+  const prefix = "route-vehicle:";
+
+  return markerId?.startsWith(prefix) ? markerId.slice(prefix.length) : null;
 }
 
 function getTrackedVehicleIconKey(vehicle: TrackedTransitVehicle) {

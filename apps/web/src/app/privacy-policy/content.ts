@@ -107,10 +107,13 @@ export const privacyPolicyContent = {
             ],
           },
           {
-            title: "Maps and Third-Party Map Services",
+            title: "Maps and Google Maps on Android",
             paragraphs: [
-              "Prossimo may use Apple Maps and Google Maps to display map-related features.",
-              "When you use map features, Apple or Google may process certain information according to their own privacy policies and terms. We do not control how these third-party map providers process information.",
+              "On Android devices, Prossimo may use Google Maps to display map-based features, including your current location, nearby stops, and stop markers.",
+              "When you use map features, Google may process certain information according to Google's own terms and privacy policy. This may include technical information about your device, app usage related to map display, and location-related information when location features are enabled.",
+              "Prossimo uses your location with Google Maps only to provide map-based public transport features, such as showing your position in relation to nearby stops. Prossimo does not store your precise location on its servers and does not use your location for advertising or marketing.",
+              "You can disable location access at any time through your device settings. If you disable location access, map features may still be available, but your current location may not be shown.",
+              "Google Maps content, map tiles, logos, and related map data are provided by Google and are subject to Google's own terms and privacy policy.",
             ],
           },
         ],
@@ -144,8 +147,19 @@ export const privacyPolicyContent = {
         ],
       },
       {
+        id: "location-and-map-features",
+        title: "5. Location and Map Features",
+        paragraphs: [
+          "The App may use your device location, with your permission, to show your current position, nearby stops, stop markers, and other map-based public transport information.",
+          "On Android devices, Prossimo may use Google Maps to display maps, your current location, and stop markers. Google Maps content is provided by Google and is subject to Google's own terms, policies, and attribution requirements.",
+          "On supported Apple devices, Prossimo may use Apple Maps for map-based features.",
+          "You are responsible for enabling or disabling location access through your device settings. If location access is disabled, some map-based features may not work as expected.",
+          "Map data, transit data, location results, and visual map content may be inaccurate, delayed, incomplete, or unavailable. You should not rely solely on map features or location features for time-critical travel decisions.",
+        ],
+      },
+      {
         id: "legal-basis",
-        title: "5. Legal Basis for Processing",
+        title: "6. Legal Basis for Processing",
         paragraphs: [
           "Where GDPR applies, we process personal data based on the following legal bases:",
         ],
@@ -160,14 +174,14 @@ export const privacyPolicyContent = {
       },
       {
         id: "third-party-services",
-        title: "6. Third-Party Services",
+        title: "7. Third-Party Services",
         paragraphs: [
           "Prossimo may use third-party services to operate and improve the App, including:",
         ],
         bullets: [
           "Expo Insights for basic app usage and performance information;",
-          "Apple Maps for map functionality on supported devices;",
-          "Google Maps for map functionality on supported devices;",
+          "Google Maps, used on Android to display maps, user location, and stop markers;",
+          "Apple Maps, used on supported Apple devices to display maps and location-based features;",
           "infrastructure and hosting providers necessary to operate the App.",
         ],
         after: [
@@ -176,7 +190,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "data-sharing",
-        title: "7. Data Sharing",
+        title: "8. Data Sharing",
         paragraphs: [
           "We do not sell personal data.",
           "We may share limited information only when necessary with:",
@@ -192,7 +206,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "data-retention",
-        title: "8. Data Retention",
+        title: "9. Data Retention",
         paragraphs: [
           "We keep personal data only for as long as necessary for the purposes described in this Privacy Policy.",
           "Precise location data is not stored on our servers.",
@@ -202,7 +216,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "security",
-        title: "9. Security",
+        title: "10. Security",
         paragraphs: [
           "We use reasonable technical and organizational measures to protect information processed through the App.",
           "However, no method of transmission or storage is completely secure, and we cannot guarantee absolute security.",
@@ -210,7 +224,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "your-rights",
-        title: "10. Your Rights",
+        title: "11. Your Rights",
         paragraphs: [
           "Where applicable, including under the GDPR, you may have the right to:",
         ],
@@ -231,15 +245,24 @@ export const privacyPolicyContent = {
       },
       {
         id: "childrens-privacy",
-        title: "11. Children's Privacy",
+        title: "12. Children's Privacy",
         paragraphs: [
           "Prossimo is not intended for children under the age required by applicable law to use digital services without parental consent.",
           "We do not knowingly collect personal data from children.",
         ],
       },
       {
+        id: "cookies-and-similar-technologies",
+        title: "13. Cookies and Similar Technologies",
+        paragraphs: [
+          "The Prossimo mobile app does not use browser cookies.",
+          "The website at https://prossimo.app may use only strictly necessary technical technologies required for the website to function. We do not use advertising cookies or marketing cookies.",
+          "If we introduce analytics, embedded third-party content, or other non-essential cookies in the future, we will update this Privacy Policy and, where required, request consent.",
+        ],
+      },
+      {
         id: "international-transfers",
-        title: "12. International Transfers",
+        title: "14. International Transfers",
         paragraphs: [
           "Some service providers used by the App may process data outside your country of residence.",
           "Where required, we rely on appropriate safeguards for international data transfers.",
@@ -247,7 +270,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "changes",
-        title: "13. Changes to This Privacy Policy",
+        title: "15. Changes to This Privacy Policy",
         paragraphs: [
           "We may update this Privacy Policy from time to time.",
           "If we make changes, we will update the effective date above and publish the updated version in the App or on our website.",
@@ -255,7 +278,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "contact",
-        title: "14. Contact",
+        title: "16. Contact",
         paragraphs: [
           "For questions about this Privacy Policy or how your data is handled, contact:",
         ],
@@ -335,10 +358,13 @@ export const privacyPolicyContent = {
             ],
           },
           {
-            title: "Mappe e servizi di mappe di terze parti",
+            title: "Mappe e Google Maps su Android",
             paragraphs: [
-              "Prossimo può utilizzare Apple Maps e Google Maps per mostrare funzionalità relative alle mappe.",
-              "Quando usi le funzionalità di mappa, Apple o Google possono trattare alcune informazioni secondo le rispettive informative sulla privacy e condizioni. Non controlliamo il modo in cui questi fornitori terzi di mappe trattano le informazioni.",
+              "Sui dispositivi Android, Prossimo puo utilizzare Google Maps per mostrare funzionalita basate sulla mappa, inclusa la tua posizione attuale, le fermate vicine e gli indicatori delle fermate.",
+              "Quando usi le funzionalita di mappa, Google puo trattare alcune informazioni secondo i propri termini e la propria informativa sulla privacy. Questo puo includere informazioni tecniche sul tuo dispositivo, l'utilizzo dell'app relativo alla visualizzazione della mappa e informazioni relative alla posizione quando le funzionalita di localizzazione sono abilitate.",
+              "Prossimo usa la tua posizione con Google Maps solo per fornire funzionalita di trasporto pubblico basate sulla mappa, come mostrare la tua posizione rispetto alle fermate vicine. Prossimo non memorizza la tua posizione precisa sui propri server e non usa la tua posizione per pubblicita o marketing.",
+              "Puoi disattivare l'accesso alla posizione in qualsiasi momento dalle impostazioni del dispositivo. Se disattivi l'accesso alla posizione, le funzionalita di mappa possono rimanere disponibili, ma la tua posizione attuale potrebbe non essere mostrata.",
+              "I contenuti di Google Maps, i riquadri della mappa, i loghi e i relativi dati cartografici sono forniti da Google e sono soggetti ai termini e all'informativa sulla privacy di Google.",
             ],
           },
         ],
@@ -374,8 +400,19 @@ export const privacyPolicyContent = {
         ],
       },
       {
+        id: "location-and-map-features",
+        title: "5. Posizione e funzionalita di mappa",
+        paragraphs: [
+          "L'App puo utilizzare la posizione del tuo dispositivo, con il tuo permesso, per mostrare la tua posizione attuale, le fermate vicine, gli indicatori delle fermate e altre informazioni sul trasporto pubblico basate sulla mappa.",
+          "Sui dispositivi Android, Prossimo puo utilizzare Google Maps per mostrare mappe, la tua posizione attuale e gli indicatori delle fermate. I contenuti di Google Maps sono forniti da Google e sono soggetti ai termini, alle policy e ai requisiti di attribuzione di Google.",
+          "Sui dispositivi Apple supportati, Prossimo puo utilizzare Apple Maps per le funzionalita basate sulla mappa.",
+          "Sei responsabile dell'attivazione o disattivazione dell'accesso alla posizione dalle impostazioni del dispositivo. Se l'accesso alla posizione e disabilitato, alcune funzionalita basate sulla mappa potrebbero non funzionare come previsto.",
+          "Dati cartografici, dati del trasporto, risultati di localizzazione e contenuti visivi della mappa possono essere inesatti, in ritardo, incompleti o non disponibili. Non dovresti affidarti esclusivamente alle funzionalita di mappa o di localizzazione per decisioni di viaggio urgenti.",
+        ],
+      },
+      {
         id: "legal-basis",
-        title: "5. Base giuridica del trattamento",
+        title: "6. Base giuridica del trattamento",
         paragraphs: [
           "Ove si applichi il GDPR, trattiamo i dati personali sulla base delle seguenti basi giuridiche:",
         ],
@@ -390,14 +427,14 @@ export const privacyPolicyContent = {
       },
       {
         id: "third-party-services",
-        title: "6. Servizi di terze parti",
+        title: "7. Servizi di terze parti",
         paragraphs: [
           "Prossimo può utilizzare servizi di terze parti per gestire e migliorare l'App, inclusi:",
         ],
         bullets: [
           "Expo Insights per informazioni di base su utilizzo e prestazioni dell'app;",
-          "Apple Maps per funzionalità di mappa sui dispositivi supportati;",
-          "Google Maps per funzionalità di mappa sui dispositivi supportati;",
+          "Google Maps, usato su Android per mostrare mappe, posizione dell'utente e indicatori delle fermate;",
+          "Apple Maps, usato sui dispositivi Apple supportati per mostrare mappe e funzionalita basate sulla posizione;",
           "fornitori di infrastruttura e hosting necessari per il funzionamento dell'App.",
         ],
         after: [
@@ -406,7 +443,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "data-sharing",
-        title: "7. Condivisione dei dati",
+        title: "8. Condivisione dei dati",
         paragraphs: [
           "Non vendiamo dati personali.",
           "Possiamo condividere informazioni limitate solo quando necessario con:",
@@ -422,7 +459,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "data-retention",
-        title: "8. Conservazione dei dati",
+        title: "9. Conservazione dei dati",
         paragraphs: [
           "Conserviamo i dati personali solo per il tempo necessario alle finalità descritte nella presente Informativa sulla privacy.",
           "I dati sulla posizione precisa non vengono memorizzati sui nostri server.",
@@ -432,7 +469,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "security",
-        title: "9. Sicurezza",
+        title: "10. Sicurezza",
         paragraphs: [
           "Utilizziamo misure tecniche e organizzative ragionevoli per proteggere le informazioni trattate tramite l'App.",
           "Tuttavia, nessun metodo di trasmissione o archiviazione è completamente sicuro e non possiamo garantire una sicurezza assoluta.",
@@ -440,7 +477,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "your-rights",
-        title: "10. I tuoi diritti",
+        title: "11. I tuoi diritti",
         paragraphs: [
           "Ove applicabile, anche ai sensi del GDPR, potresti avere il diritto di:",
         ],
@@ -461,15 +498,24 @@ export const privacyPolicyContent = {
       },
       {
         id: "childrens-privacy",
-        title: "11. Privacy dei minori",
+        title: "12. Privacy dei minori",
         paragraphs: [
           "Prossimo non è destinata a minori che non abbiano l'età richiesta dalla legge applicabile per utilizzare servizi digitali senza il consenso dei genitori.",
           "Non raccogliamo consapevolmente dati personali da minori.",
         ],
       },
       {
+        id: "cookies-and-similar-technologies",
+        title: "13. Cookie e tecnologie simili",
+        paragraphs: [
+          "L'app mobile Prossimo non usa cookie del browser.",
+          "Il sito web https://prossimo.app puo usare solo tecnologie tecniche strettamente necessarie al funzionamento del sito. Non usiamo cookie pubblicitari o cookie di marketing.",
+          "Se in futuro introdurremo analytics, contenuti incorporati di terze parti o altri cookie non essenziali, aggiorneremo la presente Informativa sulla privacy e, ove richiesto, chiederemo il consenso.",
+        ],
+      },
+      {
         id: "international-transfers",
-        title: "12. Trasferimenti internazionali",
+        title: "14. Trasferimenti internazionali",
         paragraphs: [
           "Alcuni fornitori di servizi utilizzati dall'App possono trattare dati al di fuori del tuo paese di residenza.",
           "Ove richiesto, ci basiamo su garanzie adeguate per i trasferimenti internazionali di dati.",
@@ -477,7 +523,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "changes",
-        title: "13. Modifiche alla presente Informativa sulla privacy",
+        title: "15. Modifiche alla presente Informativa sulla privacy",
         paragraphs: [
           "Possiamo aggiornare la presente Informativa sulla privacy di tanto in tanto.",
           "In caso di modifiche, aggiorneremo la data di entrata in vigore sopra indicata e pubblicheremo la versione aggiornata nell'App o sul nostro sito web.",
@@ -485,7 +531,7 @@ export const privacyPolicyContent = {
       },
       {
         id: "contact",
-        title: "14. Contatti",
+        title: "16. Contatti",
         paragraphs: [
           "Per domande sulla presente Informativa sulla privacy o su come vengono gestiti i tuoi dati, contatta:",
         ],

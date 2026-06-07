@@ -19,11 +19,18 @@ export {
 } from "./scheduled-job-runs.js";
 export {
   getActiveRealtimeAlerts,
+  getActiveRealtimeAlertsForRoute,
+  getActiveRealtimeAlertsForStop,
   markMissingRealtimeAlertsEnded,
   markRealtimeAlertEnded,
   pruneEndedRealtimeAlerts,
   upsertRealtimeAlert,
 } from "./realtime-alerts.js";
+export {
+  getRelevantStrikeNotices,
+  getSeverityOneGlobalRealtimeNews,
+  upsertStrikeNotice,
+} from "./strike-notices.js";
 export { getQueryRows } from "./query-result.js";
 export {
   agencies,
@@ -39,6 +46,7 @@ export {
   scheduledJobRuns,
   schema,
   shapes,
+  strikeNotices,
   stopRoutes,
   stopTimes,
   stops,
@@ -67,4 +75,9 @@ export type {
   RealtimeAlertTimeRange,
   UpsertRealtimeAlertValues,
 } from "./realtime-alerts.js";
+export type {
+  StrikeNoticeRow,
+  StrikeRelevanceStatus,
+  UpsertStrikeNoticeValues,
+} from "./strike-notices.js";
 export type { Schema } from "./schema.js";

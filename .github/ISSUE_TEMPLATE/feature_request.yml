@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an improvement for Prossimo.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: Describe the change you would like to see.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Any other approaches you considered?
+  - type: textarea
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Are you interested in working on this?
