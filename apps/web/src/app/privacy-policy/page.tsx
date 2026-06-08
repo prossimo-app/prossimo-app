@@ -106,6 +106,7 @@ export default async function PrivacyPolicyPage() {
         legalLabel={t("settings.sections.legal")}
         privacyPolicyLabel={t("settings.legal.privacyPolicy")}
         termsOfUseLabel={t("settings.legal.termsOfUse")}
+        contactLabel={t("settings.legal.contact")}
         navigationLinks={[
           {
             href: "/#features",

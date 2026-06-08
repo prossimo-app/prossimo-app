@@ -60,6 +60,11 @@
       "features": "Funzioni",
       "faq": "FAQ",
       "download": "Scarica"
+    },
+    "contact": {
+      "title": "Contatti",
+      "description": "Se hai domande, feedback o hai bisogno di aiuto con Prossimo, non esitare a scriverci via email. Faremo del nostro meglio per risponderti il prima possibile.",
+      "emailLabel": "Email di supporto"
     }
   },
   "home": {
@@ -306,7 +311,9 @@
       "termsOfUse": "Termini di utilizzo",
       "termsOfUseAccessibilityLabel": "Termini di utilizzo",
       "dataSources": "Fonti dati",
-      "dataSourcesAccessibilityLabel": "Fonti dati"
+      "dataSourcesAccessibilityLabel": "Fonti dati",
+      "contact": "Contatti",
+      "contactAccessibilityLabel": "Contatti"
     },
     "developerTools": {
       "title": "Strumenti sviluppatore",

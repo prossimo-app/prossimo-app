@@ -60,6 +60,11 @@
       "features": "Features",
       "faq": "FAQ",
       "download": "Download"
+    },
+    "contact": {
+      "title": "Contact us",
+      "description": "If you have any questions, feedback, or need help with Prossimo, feel free to reach out to us by email. We'll do our best to get back to you as soon as possible.",
+      "emailLabel": "Support email"
     }
   },
   "home": {
@@ -306,7 +311,9 @@
       "termsOfUse": "Terms of Use",
       "termsOfUseAccessibilityLabel": "Terms of Use",
       "dataSources": "Data sources",
-      "dataSourcesAccessibilityLabel": "Data sources"
+      "dataSourcesAccessibilityLabel": "Data sources",
+      "contact": "Contact",
+      "contactAccessibilityLabel": "Contact"
     },
     "developerTools": {
       "title": "Developer tools",

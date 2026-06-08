@@ -9,6 +9,7 @@ interface FooterLink {
 }
 
 interface FooterProps {
+  contactLabel: string;
   legalLabel: string;
   linksLabel: string;
   navigationLinks: FooterLink[];
@@ -19,6 +20,7 @@ interface FooterProps {
 const APP_NAME = "Prossimo";
 
 export function Footer({
+  contactLabel,
   legalLabel,
   linksLabel,
   navigationLinks,
@@ -77,6 +79,10 @@ export function Footer({
               {
                 href: "/terms",
                 label: termsOfUseLabel,
+              },
+              {
+                href: "/contact",
+                label: contactLabel,
               },
             ]}
           />
