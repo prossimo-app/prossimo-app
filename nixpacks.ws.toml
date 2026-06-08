@@ -1,0 +1,13 @@
+providers = ["node"]
+
+[variables]
+HOST = "0.0.0.0"
+NODE_ENV = "production"
+NIXPACKS_NODE_VERSION = "24"
+WS_PORT = "1337"
+
+[phases.build]
+cmds = ["pnpm turbo run build --filter=@prossimo-app/websocket..."]
+
+[start]
+cmd = "node apps/websocket/dist/server.js"

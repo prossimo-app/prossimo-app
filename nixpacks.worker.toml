@@ -1,0 +1,11 @@
+providers = ["node"]
+
+[variables]
+NODE_ENV = "production"
+NIXPACKS_NODE_VERSION = "24"
+
+[phases.build]
+cmds = ["pnpm turbo run build --filter=@prossimo-app/worker..."]
+
+[start]
+cmd = "node apps/worker/dist/index.js"
