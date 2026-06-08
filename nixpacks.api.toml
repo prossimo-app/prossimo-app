@@ -1,0 +1,13 @@
+providers = ["node"]
+
+[variables]
+HOST = "0.0.0.0"
+NODE_ENV = "production"
+NIXPACKS_NODE_VERSION = "24"
+PORT = "3000"
+
+[phases.build]
+cmds = ["pnpm turbo run build --filter=@prossimo-app/api-server..."]
+
+[start]
+cmd = "node apps/api/dist/server.js"

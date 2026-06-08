@@ -20,7 +20,7 @@ pnpm redis:dev:start
 pnpm dev
 ```
 
-The main web app runs on port `3030` through `apps/web` and serves the tRPC HTTP API at `/api/trpc`. Other apps and services are managed by Turborepo from the root `pnpm dev` command.
+The main web app runs on port `3030` through `apps/web`. Other apps and services are managed by Turborepo from the root `pnpm dev` command.
 
 Useful commands:
 
@@ -58,7 +58,8 @@ pnpm --filter @prossimo-app/worker dev:sync-gtfs-static
 
 ```text
 apps/mobile      Expo app
-apps/web         Next.js landing site and tRPC HTTP API
+apps/web         Next.js landing site
+apps/api         API server
 apps/websocket   WebSocket server
 apps/worker      Scheduled and background jobs
 packages/api     Shared API router and transit logic

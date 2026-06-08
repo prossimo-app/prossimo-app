@@ -1,8 +1,8 @@
 import Constants from "expo-constants";
 
-const PRODUCTION_API_URL = "https://prossimo.app";
-const PRODUCTION_WS_URL = "wss://api.prossimo.app";
-const DEV_API_PORT = 3030;
+const PRODUCTION_API_URL = "https://api.prossimo.app";
+const PRODUCTION_WS_URL = "wss://ws.prossimo.app";
+const DEV_API_PORT = 3000;
 const DEV_WS_PORT = 1337;
 
 function trimTrailingSlash(url: string) {

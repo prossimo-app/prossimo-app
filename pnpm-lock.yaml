@@ -57,6 +57,40 @@ importers:
         specifier: 'catalog:'
         version: 6.0.3
 
+  apps/api:
+    dependencies:
+      '@prossimo-app/api':
+        specifier: workspace:*
+        version: link:../../packages/api
+      '@trpc/server':
+        specifier: ^11.0.0
+        version: 11.17.0(typescript@6.0.3)
+    devDependencies:
+      '@prossimo-app/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@prossimo-app/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@prossimo-app/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.12.4
+      eslint:
+        specifier: 'catalog:'
+        version: 10.4.0(jiti@2.7.0)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.8.3
+      tsx:
+        specifier: ^4.20.6
+        version: 4.22.4
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+
   apps/mobile:
     dependencies:
       '@expo-google-fonts/instrument-sans':
@@ -258,15 +292,9 @@ importers:
       '@phosphor-icons/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      '@prossimo-app/api':
-        specifier: workspace:*
-        version: link:../../packages/api
       '@prossimo-app/localization':
         specifier: workspace:*
         version: link:../../packages/localization
-      '@trpc/server':
-        specifier: ^11.0.0
-        version: 11.17.0(typescript@6.0.3)
       motion:
         specifier: ^12.40.0
         version: 12.40.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -280,6 +308,9 @@ importers:
         specifier: 19.2.4
         version: 19.2.4(react@19.2.4)
     devDependencies:
+      '@prossimo-app/api':
+        specifier: workspace:*
+        version: link:../../packages/api
       '@prossimo-app/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint

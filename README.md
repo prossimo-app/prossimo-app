@@ -43,11 +43,20 @@ pnpm format
 
 ## Coolify deployments
 
-The worker and WebSocket server can be deployed as separate Coolify applications
-from this monorepo with the Nixpacks build pack.
+The API, worker, and WebSocket server can be deployed as separate Coolify
+applications from this monorepo with the Nixpacks build pack.
 
-Use the repository root as the Coolify base directory for both applications so
+Use the repository root as the Coolify base directory for each application so
 pnpm workspace dependencies are available during the build.
+
+API application:
+
+```text
+Build Pack: Nixpacks
+Base Directory: /
+NIXPACKS_CONFIG_FILE: nixpacks.api.toml
+Port: 3000
+```
 
 Worker application:
 
@@ -65,6 +74,7 @@ Build Pack: Nixpacks
 Base Directory: /
 NIXPACKS_CONFIG_FILE: nixpacks.ws.toml
 Port: 1337
+Domain: ws.prossimo.app
 ```
 
 Configure runtime variables in Coolify for the services that need them, including
