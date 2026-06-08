@@ -7,7 +7,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: IS_DEV ? "Prossimo (Dev)" : "Prossimo",
   slug: "prossimo-app",
   scheme: IS_DEV ? "prossimo-app-dev" : "prossimo-app",
-  version: "1.0.0",
+  version: "1.0.1",
   orientation: "portrait",
   userInterfaceStyle: "automatic",
   updates: {

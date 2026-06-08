@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
+import { ObserveRoot } from "expo-observe";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -47,7 +48,7 @@ import { queryClient } from "~/utils/api";
 
 void SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontsLoaded, fontError] = useFonts({
     InstrumentSans_400Regular,
     InstrumentSans_400Regular_Italic,
@@ -222,3 +223,5 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
+export default ObserveRoot.wrap(RootLayout);
