@@ -92,7 +92,7 @@ export default function OnboardingScreen() {
 
         <AppButton
           onPress={() => {
-            router.push("/onboarding/location");
+            router.push("/onboarding/tracking");
           }}
         >
           {t("onboarding.primaryAction")}

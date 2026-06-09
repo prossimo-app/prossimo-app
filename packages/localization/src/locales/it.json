@@ -206,6 +206,12 @@
       "nextAction": "Avanti",
       "skipAction": "Salta"
     },
+    "tracking": {
+      "title": "Ci serve il tuo aiuto per migliorare Prossimo",
+      "subtitle": "Prossimo può usare i segnali di tracciamento dell'attività per capire come le persone usano l'app e migliorare l'esperienza. È facoltativo, e puoi scegliere se condividere queste informazioni o meno.",
+      "primaryAction": "Ho capito",
+      "imageAlt": "Illustrazione del tracciamento dell'attività"
+    },
     "location": {
       "title": "Ci serve l'accesso alla posizione",
       "subtitle": "Prossimo usa la tua posizione per trovare le fermate piu vicine e mostrarti i trasporti intorno a te.",

@@ -206,6 +206,12 @@
       "nextAction": "Next",
       "skipAction": "Skip"
     },
+    "tracking": {
+      "title": "We need your help to improve Prossimo",
+      "subtitle": "Prossimo can use activity tracking signals to understand how people use the app and improve the experience. This is optional, and you can choose to share this information or not.",
+      "primaryAction": "I understand",
+      "imageAlt": "Activity tracking illustration"
+    },
     "location": {
       "title": "We need location access",
       "subtitle": "Prossimo uses your location to find the nearest stops and show the transport options around you.",

@@ -1,3 +1,4 @@
+import type { PropsWithChildren } from "react";
 import {
   createContext,
   useCallback,
@@ -6,7 +7,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import type { PropsWithChildren } from "react";
 import * as SecureStore from "expo-secure-store";
 
 const onboardingStorageKey = "hasSeenOnboarding";
@@ -56,7 +56,6 @@ export function OnboardingProvider({ children }: PropsWithChildren) {
 
   const resetOnboarding = useCallback(async () => {
     await SecureStore.deleteItemAsync(onboardingStorageKey);
-    setHasSeenOnboarding(false);
   }, []);
 
   const value = useMemo(
