@@ -33,15 +33,13 @@ import { languageOptions, useTranslation } from "@prossimo-app/localization";
 import { isInsideTorino } from "~/map/torino-bounds";
 import { useOnboarding } from "~/onboarding/onboarding-provider";
 import { useSettings } from "~/settings/settings-provider";
-import {
-  secondaryTextColor,
-  settingsScreenBackgroundColor,
-} from "~/theme/native-colors";
+import { useNativeColors } from "~/theme/native-colors";
 
 const fullWidthButtonModifiers = [frame({ maxWidth: Infinity, minHeight: 32 })];
 const fullScreenListModifiers = [
   frame({ maxHeight: Infinity, maxWidth: Infinity }),
 ];
+const fullWidthColumnModifiers = [frame({ maxWidth: Infinity })];
 
 const mapLimitIcon = Icon.select({
   ios: "map.fill",
@@ -138,6 +136,8 @@ function SettingIcon({ accessibilityLabel, color, name }: SettingIconProps) {
 export default function SettingsScreen() {
   const { t } = useTranslation();
   const { resetOnboarding } = useOnboarding();
+  const { secondaryTextColor, settingsScreenBackgroundColor } =
+    useNativeColors();
   const appVersion = getAppVersion();
   const {
     hasLoadedSettings,
@@ -185,18 +185,21 @@ export default function SettingsScreen() {
   }
 
   return (
-    <Host style={{ backgroundColor: settingsScreenBackgroundColor, flex: 1 }}>
+    <Host
+      style={{
+        backgroundColor: settingsScreenBackgroundColor,
+        flex: 1,
+      }}
+    >
       <Column
         alignment="center"
         spacing={14}
         modifiers={fullScreenListModifiers}
-        style={{ width: "100%" }}
       >
         <FieldGroup
           modifiers={fullScreenListModifiers}
           style={{
             backgroundColor: settingsScreenBackgroundColor,
-            width: "100%",
           }}
           testID="settings-list"
         >
@@ -235,7 +238,11 @@ export default function SettingsScreen() {
               </ListItem.Leading>
               <ListItem.Trailing>
                 <Row alignment="center" spacing={8}>
-                  <Text textStyle={{ color: secondaryTextColor }}>
+                  <Text
+                    textStyle={{
+                      color: secondaryTextColor,
+                    }}
+                  >
                     {t(`settings.theme.options.${theme}`)}
                   </Text>
                   <Icon name={chevronIcon} size={18} />
@@ -376,7 +383,11 @@ export default function SettingsScreen() {
             </ListItem>
 
             <FieldGroup.SectionFooter>
-              <Column alignment="center" spacing={14} style={{ width: "100%" }}>
+              <Column
+                alignment="center"
+                spacing={14}
+                modifiers={fullWidthColumnModifiers}
+              >
                 <Text
                   textStyle={{
                     color: secondaryTextColor,

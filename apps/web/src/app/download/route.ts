@@ -4,7 +4,9 @@ import { NextResponse } from "next/server";
 const androidStoreUrl =
   process.env.GOOGLE_PLAY_DOWNLOAD_URL ??
   "https://play.google.com/store/apps/details?id=com.prossimo.app";
-const iosStoreUrl = process.env.APP_STORE_DOWNLOAD_URL ?? "";
+const iosStoreUrl =
+  process.env.APP_STORE_DOWNLOAD_URL ??
+  "https://apps.apple.com/us/app/prossimo/id6777119422";
 
 export function GET(request: NextRequest) {
   const userAgent = request.headers.get("user-agent") ?? "";

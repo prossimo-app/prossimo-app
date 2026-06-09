@@ -23,7 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
   },
   android: {
-    package: IS_DEV ? "com.prossimo.app.dev" : "com.prossimo.app",
+    package: IS_DEV ? "app.prossimo.app.dev" : "app.prossimo.app",
     config: {
       googleMaps: {
         apiKey: process.env.GOOGLE_MAPS_API_KEY ?? "",

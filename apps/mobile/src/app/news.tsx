@@ -11,6 +11,7 @@ import { SymbolView } from "expo-symbols";
 import ChevronRightIcon from "@expo/material-symbols/chevron_right.xml";
 import NewspaperIcon from "@expo/material-symbols/newspaper.xml";
 import { Column, FieldGroup, Host, Icon, ListItem, Text } from "@expo/ui";
+import { frame } from "@expo/ui/swift-ui/modifiers";
 import { useQuery } from "@tanstack/react-query";
 
 import { useTranslation } from "@prossimo-app/localization";
@@ -22,11 +23,10 @@ import {
   getStrikeTiming,
   isVisibleStrikeNotice,
 } from "~/news/strike-notices";
-import {
-  secondaryTextColor,
-  settingsScreenBackgroundColor,
-} from "~/theme/native-colors";
+import { useNativeColors } from "~/theme/native-colors";
 import { trpc } from "~/utils/api";
+
+const fullWidthColumnModifiers = [frame({ maxWidth: Infinity })];
 
 const newsIcon = Icon.select({
   ios: "newspaper.fill",
@@ -91,6 +91,7 @@ function NewsListItem({
   title: string;
 }) {
   const displayDate = formatDate(startsAt ?? publishedAt);
+  const { secondaryTextColor } = useNativeColors();
 
   return (
     <ListItem supportingText={description ?? title}>
@@ -119,11 +120,17 @@ export default function NewsScreen() {
     newsQuery.data?.strikes.filter((strike) => isVisibleStrikeNotice(strike)) ??
     [];
   const globalNews = newsQuery.data?.globalNews ?? [];
+  const { secondaryTextColor, settingsScreenBackgroundColor } =
+    useNativeColors();
 
   return (
     <>
       <Host style={{ backgroundColor: settingsScreenBackgroundColor, flex: 1 }}>
-        <Column alignment="center" spacing={14} style={{ width: "100%" }}>
+        <Column
+          alignment="center"
+          spacing={14}
+          modifiers={fullWidthColumnModifiers}
+        >
           <FieldGroup testID="news-list">
             <FieldGroup.Section title={t("news.sections.strikes")}>
               {newsQuery.isLoading ? (
@@ -264,6 +271,7 @@ function StrikeDetailModal({
   strike: StrikeNotice | null;
 }) {
   const { t } = useTranslation();
+  const { secondaryTextColor } = useNativeColors();
   const startsAt = strike ? getStrikeStartDate(strike) : null;
   const date = startsAt ? formatDate(startsAt.toISOString()) : "";
   const body =

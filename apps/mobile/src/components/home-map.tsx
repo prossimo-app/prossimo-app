@@ -1,8 +1,21 @@
+import type { SkFont, SkTypeface } from "@shopify/react-native-skia";
 import type { ImageRef } from "expo-image";
 import type { CameraPosition, Coordinates } from "expo-maps";
 import type { MutableRefObject, Ref } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Platform, Text, useWindowDimensions, View } from "react-native";
+import {
+  PixelRatio,
+  Platform,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
+import {
+  FontStyle,
+  ImageFormat,
+  PaintStyle,
+  Skia,
+} from "@shopify/react-native-skia";
 import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { AppleMaps, GoogleMaps } from "expo-maps";
@@ -56,6 +69,14 @@ const VEHICLE_MARKER_SIZE = 46;
 const ROUTE_SHAPE_LINE_WIDTH = 2.5;
 const CLUSTER_SCREEN_RADIUS_PX = 44;
 const CLUSTER_MARKER_SIZE = 44;
+const STOP_LABEL_MIN_ZOOM = 14.5;
+const STOP_LABEL_MARKER_WIDTH = 168;
+const STOP_LABEL_MARKER_HEIGHT = 64;
+const STOP_LABEL_PIN_CENTER_Y = 22;
+const STOP_LABEL_BASELINE_Y = CLUSTER_MARKER_SIZE + 14;
+const STOP_LABEL_MAX_CHARS = 24;
+const STOP_LABEL_TEXT_COLOR = "#111827";
+const STOP_LABEL_HALO_COLOR = "#ffffff";
 const CLUSTER_FOCUS_CAMERA_PADDING_PX = 72;
 const CLUSTER_FOCUS_SCREEN_Y = 0.3;
 const MIN_STOPS_FOR_CLUSTERING = 15;
@@ -77,13 +98,21 @@ interface CameraMoveEvent {
 }
 
 interface MapCameraRef {
-  setCameraPosition: (config: CameraPosition & { duration?: number }) => void;
+  setCameraPosition: (
+    config: CameraPosition & { duration?: number },
+  ) => Promise<void> | void;
 }
 
 interface NearbyStopsQueryViewport {
   coordinates: Coordinates;
   radiusMeters: number;
   zoom: number;
+}
+
+interface StopMarkerIconRequest {
+  count: number;
+  key: string;
+  label: string | null;
 }
 
 interface StopMarker {
@@ -152,8 +181,8 @@ export function HomeMap({
     );
   const nearbyStopsViewportRef =
     useRef<NearbyStopsQueryViewport>(nearbyStopsViewport);
-  const [clusterIconsByCount, setClusterIconsByCount] = useState(
-    () => new Map<number, ImageRef>(),
+  const [stopMarkerIconsByKey, setStopMarkerIconsByKey] = useState(
+    () => new Map<string, ImageRef>(),
   );
   const [vehicleIconsByKey, setVehicleIconsByKey] = useState(
     () => new Map<string, ImageRef>(),
@@ -249,7 +278,7 @@ export function HomeMap({
         zoom,
       };
 
-      mapRef?.setCameraPosition(cameraPosition);
+      animateCamera(mapRef, cameraPosition);
       currentCameraPositionRef.current = cameraPosition;
       updateNearbyStopsViewport(cameraPosition, {
         screenHeight: windowHeight,
@@ -271,7 +300,7 @@ export function HomeMap({
       lineDetailCameraPositionRef.current = null;
 
       if (!selectedStopMarkerIdRef.current) {
-        mapRef?.setCameraPosition({
+        animateCamera(mapRef, {
           ...restoredCameraPosition,
           duration: getCameraAnimationDuration(),
         });
@@ -311,7 +340,7 @@ export function HomeMap({
         zoom: selectedStopCameraPosition.zoom,
       };
 
-      mapRef?.setCameraPosition({
+      animateCamera(mapRef, {
         ...selectedStopCameraPosition,
         duration: getCameraAnimationDuration(),
       });
@@ -392,7 +421,7 @@ export function HomeMap({
       zoom: SELECTED_STOP_MARKER_ZOOM,
     };
 
-    mapRef?.setCameraPosition(cameraPosition);
+    animateCamera(mapRef, cameraPosition);
     currentCameraPositionRef.current = cameraPosition;
     selectedStopCameraPositionRef.current = cameraPosition;
     updateNearbyStopsViewport(cameraPosition, {
@@ -558,7 +587,7 @@ export function HomeMap({
       duration: getCameraAnimationDuration(),
     };
 
-    mapRef?.setCameraPosition(cameraPosition);
+    animateCamera(mapRef, cameraPosition);
     currentCameraPositionRef.current = cameraPosition;
     updateNearbyStopsViewport(routeCameraPosition, {
       screenHeight: windowHeight,
@@ -567,17 +596,26 @@ export function HomeMap({
       viewportRef: nearbyStopsViewportRef,
     });
   }, [routeShapePolylines, trackedVehicle, windowHeight, windowWidth]);
-  const clusterCounts = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          visibleStopMarkers
-            .filter((marker) => marker.count > 1)
-            .map((marker) => marker.count),
-        ),
-      ),
-    [visibleStopMarkers],
-  );
+  const showStopLabels = nearbyStopsViewport.zoom >= STOP_LABEL_MIN_ZOOM;
+  const stopMarkerIconRequests = useMemo<StopMarkerIconRequest[]>(() => {
+    if (Platform.OS !== "android") {
+      return [];
+    }
+
+    const requestsByKey = new Map<string, StopMarkerIconRequest>();
+
+    for (const marker of visibleStopMarkers) {
+      const { key, label } = getStopMarkerIconInfo(marker, showStopLabels);
+
+      if (requestsByKey.has(key)) {
+        continue;
+      }
+
+      requestsByKey.set(key, { count: marker.count, key, label });
+    }
+
+    return Array.from(requestsByKey.values());
+  }, [showStopLabels, visibleStopMarkers]);
   const appleMarkers = useMemo<AppleMaps.Marker[]>(() => {
     const markers: AppleMaps.Marker[] = visibleStopMarkers.map((marker) => ({
       coordinates: marker.coordinates,
@@ -615,29 +653,52 @@ export function HomeMap({
     return markers;
   }, [routeVehicleMarkers, t, trackedVehicle, visibleStopMarkers]);
   const googleMarkers = useMemo<GoogleMaps.Marker[]>(() => {
-    const markers: GoogleMaps.Marker[] = visibleStopMarkers.map((marker) => ({
-      anchor: marker.count > 1 ? { x: 0.5, y: 0.5 } : undefined,
-      coordinates: {
-        latitude: marker.coordinates.latitude,
-        longitude: marker.coordinates.longitude,
-      },
-      icon:
-        marker.count > 1 ? clusterIconsByCount.get(marker.count) : undefined,
-      id: marker.id,
-      showCallout: true,
-      snippet:
-        marker.count > 1
-          ? t("home.map.clusterTitle", { count: marker.count })
-          : getStopMarkerSnippet(marker.routes),
-      title: marker.title,
-      zIndex: marker.count > 1 ? 2 : 1,
-    }));
+    // Only render a marker once its Skia icon has loaded. Rendering with an
+    // undefined icon makes Google fall back to its default red pin, which would
+    // flash before the real icon appears after a camera move.
+    const markers: GoogleMaps.Marker[] = visibleStopMarkers.flatMap((marker) => {
+      const { key, label } = getStopMarkerIconInfo(marker, showStopLabels);
+      const icon = stopMarkerIconsByKey.get(key);
+
+      if (!icon) {
+        return [];
+      }
+
+      const hasLabel = label !== null;
+
+      return [
+        {
+          anchor: hasLabel
+            ? { x: 0.5, y: STOP_LABEL_PIN_CENTER_Y / STOP_LABEL_MARKER_HEIGHT }
+            : { x: 0.5, y: 0.5 },
+          coordinates: {
+            latitude: marker.coordinates.latitude,
+            longitude: marker.coordinates.longitude,
+          },
+          icon,
+          id: marker.id,
+          showCallout: true,
+          snippet:
+            marker.count > 1
+              ? t("home.map.clusterTitle", { count: marker.count })
+              : getStopMarkerSnippet(marker.routes),
+          title: marker.title,
+          zIndex: marker.count > 1 ? 2 : 1,
+        },
+      ];
+    });
 
     for (const routeVehicle of routeVehicleMarkers) {
+      const icon = vehicleIconsByKey.get(getTrackedVehicleIconKey(routeVehicle));
+
+      if (!icon) {
+        continue;
+      }
+
       markers.push({
         anchor: { x: 0.5, y: 0.5 },
         coordinates: routeVehicle.coordinates,
-        icon: vehicleIconsByKey.get(getTrackedVehicleIconKey(routeVehicle)),
+        icon,
         id: getRouteVehicleMarkerId(routeVehicle),
         showCallout: true,
         snippet: undefined,
@@ -649,24 +710,29 @@ export function HomeMap({
     }
 
     if (trackedVehicle) {
-      markers.push({
-        anchor: { x: 0.5, y: 0.5 },
-        coordinates: trackedVehicle.coordinates,
-        icon: vehicleIconsByKey.get(getTrackedVehicleIconKey(trackedVehicle)),
-        id: getTrackedVehicleMarkerId(trackedVehicle),
-        showCallout: true,
-        snippet: undefined,
-        title: t("home.drawer.arrivals.line", {
-          line: trackedVehicle.routeLabel,
-        }),
-        zIndex: 4,
-      });
+      const icon = vehicleIconsByKey.get(getTrackedVehicleIconKey(trackedVehicle));
+
+      if (icon) {
+        markers.push({
+          anchor: { x: 0.5, y: 0.5 },
+          coordinates: trackedVehicle.coordinates,
+          icon,
+          id: getTrackedVehicleMarkerId(trackedVehicle),
+          showCallout: true,
+          snippet: undefined,
+          title: t("home.drawer.arrivals.line", {
+            line: trackedVehicle.routeLabel,
+          }),
+          zIndex: 4,
+        });
+      }
     }
 
     return markers;
   }, [
-    clusterIconsByCount,
     routeVehicleMarkers,
+    showStopLabels,
+    stopMarkerIconsByKey,
     t,
     trackedVehicle,
     vehicleIconsByKey,
@@ -777,7 +843,7 @@ export function HomeMap({
           onStopSelectionChange?.(null);
         }
 
-        mapRef?.setCameraPosition({
+        animateCamera(mapRef, {
           ...cameraPosition,
           duration: getCameraAnimationDuration(),
         });
@@ -815,7 +881,7 @@ export function HomeMap({
         zoom: SELECTED_STOP_MARKER_ZOOM,
       };
 
-      mapRef?.setCameraPosition(cameraPosition);
+      animateCamera(mapRef, cameraPosition);
       selectedStopCameraPositionRef.current = cameraPosition;
       onStopSelectionChange?.({
         coordinates: stopMarker.coordinates,
@@ -894,59 +960,84 @@ export function HomeMap({
   );
 
   useEffect(() => {
-    if (clusterCounts.length === 0) {
+    if (stopMarkerIconRequests.length === 0) {
       return;
     }
 
-    const missingCounts = clusterCounts.filter(
-      (count) => !clusterIconsByCount.has(count),
+    const missingRequests = stopMarkerIconRequests.filter(
+      (request) => !stopMarkerIconsByKey.has(request.key),
     );
 
-    if (missingCounts.length === 0) {
+    if (missingRequests.length === 0) {
       return;
     }
 
     let isMounted = true;
 
-    async function loadClusterIcons() {
-      const icons = await Promise.all(
-        missingCounts.map(async (count) => ({
-          count,
-          icon: await Image.loadAsync(
-            {
-              height: CLUSTER_MARKER_SIZE,
-              uri: createClusterMarkerDataUri(count),
-              width: CLUSTER_MARKER_SIZE,
-            },
-            {
-              maxHeight: CLUSTER_MARKER_SIZE,
-              maxWidth: CLUSTER_MARKER_SIZE,
-            },
-          ),
-        })),
+    async function loadStopMarkerIcons() {
+      // Rasterize each marker to a PNG with Skia, then hand the bitmap to
+      // expo-image. expo-maps converts the icon Drawable with `toBitmap()`,
+      // which requires a real raster bitmap — an SVG decodes to a vector
+      // PictureDrawable (intrinsic size -1) and silently fails to render.
+      // Use allSettled so one failure doesn't drop the whole batch; failed
+      // keys simply retry on the next render that still needs them.
+      const results = await Promise.allSettled(
+        missingRequests.map(async (request) => {
+          const image = createStopMarkerImage({
+            count: request.count,
+            label: request.label,
+          });
+
+          if (!image) {
+            throw new Error("Skia surface unavailable");
+          }
+
+          return {
+            icon: await Image.loadAsync(
+              {
+                height: image.height,
+                uri: image.uri,
+                width: image.width,
+              },
+              {
+                maxHeight: image.height,
+                maxWidth: image.width,
+              },
+            ),
+            key: request.key,
+          };
+        }),
       );
 
       if (!isMounted) {
         return;
       }
 
-      setClusterIconsByCount((currentIcons) => {
+      const icons = results.flatMap((result) =>
+        result.status === "fulfilled" ? [result.value] : [],
+      );
+
+      if (icons.length === 0) {
+        return;
+      }
+
+      setStopMarkerIconsByKey((currentIcons) => {
         const nextIcons = new Map(currentIcons);
 
-        for (const { count, icon } of icons) {
-          nextIcons.set(count, icon);
+        for (const { icon, key } of icons) {
+          nextIcons.set(key, icon);
         }
 
         return nextIcons;
       });
     }
 
-    void loadClusterIcons();
+    void loadStopMarkerIcons();
 
     return () => {
       isMounted = false;
     };
-  }, [clusterCounts, clusterIconsByCount]);
+  }, [stopMarkerIconRequests, stopMarkerIconsByKey]);
 
   useEffect(() => {
     if (Platform.OS !== "android") {
@@ -968,24 +1059,44 @@ export function HomeMap({
     let isMounted = true;
 
     async function loadVehicleIcon() {
-      const icons = await Promise.all(
-        missingVehicles.map(async (vehicle) => ({
-          icon: await Image.loadAsync(
-            {
-              height: VEHICLE_MARKER_SIZE,
-              uri: createTransitVehicleMarkerDataUri(vehicle),
-              width: VEHICLE_MARKER_SIZE,
-            },
-            {
-              maxHeight: VEHICLE_MARKER_SIZE,
-              maxWidth: VEHICLE_MARKER_SIZE,
-            },
-          ),
-          key: getTrackedVehicleIconKey(vehicle),
-        })),
+      // Rasterize with Skia so expo-maps receives a real bitmap (see the stop
+      // marker effect for why an SVG icon silently fails to render). Use
+      // allSettled so one failure doesn't drop the whole batch; failed keys
+      // simply retry on the next render that still needs them.
+      const results = await Promise.allSettled(
+        missingVehicles.map(async (vehicle) => {
+          const image = createVehicleMarkerImage(vehicle);
+
+          if (!image) {
+            throw new Error("Skia surface unavailable");
+          }
+
+          return {
+            icon: await Image.loadAsync(
+              {
+                height: image.height,
+                uri: image.uri,
+                width: image.width,
+              },
+              {
+                maxHeight: image.height,
+                maxWidth: image.width,
+              },
+            ),
+            key: getTrackedVehicleIconKey(vehicle),
+          };
+        }),
       );
 
       if (!isMounted) {
+        return;
+      }
+
+      const icons = results.flatMap((result) =>
+        result.status === "fulfilled" ? [result.value] : [],
+      );
+
+      if (icons.length === 0) {
         return;
       }
 
@@ -1274,7 +1385,7 @@ function restorePreviousCameraPosition(
     return;
   }
 
-  mapRef?.setCameraPosition({
+  animateCamera(mapRef, {
     ...previousCameraPosition,
     duration: options.animationDuration,
   });
@@ -1303,6 +1414,20 @@ function restorePreviousCameraPosition(
   }
 }
 
+function animateCamera(
+  mapRef: MapCameraRef | null,
+  config: CameraPosition & { duration?: number },
+) {
+  // On Android `setCameraPosition` returns a promise that rejects with a
+  // CancellationException whenever the in-flight animation is superseded by a
+  // newer one, interrupted by a gesture, or cancelled on unmount. These
+  // interruptions are expected, so swallow the rejection instead of letting it
+  // surface as an uncaught promise rejection.
+  void Promise.resolve(mapRef?.setCameraPosition(config)).catch(() => {
+    // Ignore cancelled camera animations.
+  });
+}
+
 function getCameraAnimationDuration() {
   if (Platform.OS !== "android") {
     return undefined;
@@ -1319,7 +1444,7 @@ function keepCameraInTorino(
     return;
   }
 
-  mapRef?.setCameraPosition({
+  animateCamera(mapRef, {
     coordinates: clampToTorino(event.coordinates),
     zoom: Math.max(event.zoom, 12),
   });
@@ -1974,12 +2099,155 @@ function getMetersPerPixel(latitude: number, zoom: number) {
   );
 }
 
-function createClusterMarkerDataUri(count: number) {
-  const text = String(count);
-  const fontSize = text.length <= 2 ? 18 : text.length === 3 ? 15 : 12;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${CLUSTER_MARKER_SIZE}" height="${CLUSTER_MARKER_SIZE}" viewBox="0 0 ${CLUSTER_MARKER_SIZE} ${CLUSTER_MARKER_SIZE}"><circle cx="22" cy="22" r="20" fill="${CLUSTER_MARKER_COLOR}"/><circle cx="22" cy="22" r="20" fill="none" stroke="${CLUSTER_MARKER_TEXT_COLOR}" stroke-width="3"/><text x="22" y="22" dy=".35em" text-anchor="middle" font-family="Arial, sans-serif" font-size="${fontSize}" font-weight="700" fill="${CLUSTER_MARKER_TEXT_COLOR}">${text}</text></svg>`;
+function getStopMarkerIconInfo(
+  marker: StopMarker,
+  showStopLabels: boolean,
+): { key: string; label: string | null } {
+  if (marker.count > 1) {
+    return { key: `cluster:${marker.count}`, label: null };
+  }
 
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  if (!showStopLabels) {
+    return { key: "stop", label: null };
+  }
+
+  const label = truncateStopLabel(marker.title);
+
+  if (!label) {
+    return { key: "stop", label: null };
+  }
+
+  return { key: `stop:${label}`, label };
+}
+
+interface MarkerImage {
+  height: number;
+  uri: string;
+  width: number;
+}
+
+// Cache the system typeface lookup. If it fails, `getMarkerFont` falls back to
+// Skia's default font.
+let markerTypeface: SkTypeface | null = null;
+let isMarkerTypefaceResolved = false;
+
+function getMarkerTypeface(): SkTypeface | null {
+  if (!isMarkerTypefaceResolved) {
+    isMarkerTypefaceResolved = true;
+    markerTypeface = Skia.FontMgr.System().matchFamilyStyle(
+      "sans-serif",
+      FontStyle.Bold,
+    );
+  }
+
+  return markerTypeface;
+}
+
+function getMarkerFont(size: number): SkFont {
+  return Skia.Font(getMarkerTypeface() ?? undefined, size);
+}
+
+function getCenteredTextX(font: SkFont, text: string, centerX: number) {
+  return centerX - font.getTextWidth(text) / 2;
+}
+
+function createStopMarkerImage({
+  count,
+  label,
+}: {
+  count: number;
+  label: string | null;
+}): MarkerImage | null {
+  const isCluster = count > 1;
+  const hasLabel = label !== null && label.length > 0;
+  const logicalWidth = hasLabel ? STOP_LABEL_MARKER_WIDTH : CLUSTER_MARKER_SIZE;
+  const logicalHeight = hasLabel
+    ? STOP_LABEL_MARKER_HEIGHT
+    : CLUSTER_MARKER_SIZE;
+  const scale = Math.min(Math.max(PixelRatio.get(), 1), 3);
+  const pixelWidth = Math.ceil(logicalWidth * scale);
+  const pixelHeight = Math.ceil(logicalHeight * scale);
+  const surface = Skia.Surface.Make(pixelWidth, pixelHeight);
+
+  if (!surface) {
+    return null;
+  }
+
+  const canvas = surface.getCanvas();
+  canvas.scale(scale, scale);
+
+  const cx = logicalWidth / 2;
+  const cy = STOP_LABEL_PIN_CENTER_Y;
+
+  const fillPaint = Skia.Paint();
+  fillPaint.setAntiAlias(true);
+  fillPaint.setColor(
+    Skia.Color(isCluster ? CLUSTER_MARKER_COLOR : STOP_MARKER_COLOR),
+  );
+  canvas.drawCircle(cx, cy, 20, fillPaint);
+
+  const ringPaint = Skia.Paint();
+  ringPaint.setAntiAlias(true);
+  ringPaint.setStyle(PaintStyle.Stroke);
+  ringPaint.setStrokeWidth(3);
+  ringPaint.setColor(Skia.Color(CLUSTER_MARKER_TEXT_COLOR));
+  canvas.drawCircle(cx, cy, 20, ringPaint);
+
+  if (isCluster) {
+    const text = String(count);
+    const fontSize = text.length <= 2 ? 18 : text.length === 3 ? 15 : 12;
+    const font = getMarkerFont(fontSize);
+    const metrics = font.getMetrics();
+    const textPaint = Skia.Paint();
+    textPaint.setAntiAlias(true);
+    textPaint.setColor(Skia.Color(CLUSTER_MARKER_TEXT_COLOR));
+    canvas.drawText(
+      text,
+      getCenteredTextX(font, text, cx),
+      cy - (metrics.ascent + metrics.descent) / 2,
+      textPaint,
+      font,
+    );
+  } else {
+    const dotPaint = Skia.Paint();
+    dotPaint.setAntiAlias(true);
+    dotPaint.setColor(Skia.Color(CLUSTER_MARKER_TEXT_COLOR));
+    canvas.drawCircle(cx, cy, 6, dotPaint);
+  }
+
+  if (hasLabel) {
+    const font = getMarkerFont(13);
+    const x = getCenteredTextX(font, label, cx);
+    // Draw the label twice: a thick white stroke underneath acts as a halo so
+    // the text stays legible over any map tile, with the fill drawn on top.
+    const haloPaint = Skia.Paint();
+    haloPaint.setAntiAlias(true);
+    haloPaint.setStyle(PaintStyle.Stroke);
+    haloPaint.setStrokeWidth(3);
+    haloPaint.setColor(Skia.Color(STOP_LABEL_HALO_COLOR));
+    canvas.drawText(label, x, STOP_LABEL_BASELINE_Y, haloPaint, font);
+
+    const labelPaint = Skia.Paint();
+    labelPaint.setAntiAlias(true);
+    labelPaint.setColor(Skia.Color(STOP_LABEL_TEXT_COLOR));
+    canvas.drawText(label, x, STOP_LABEL_BASELINE_Y, labelPaint, font);
+  }
+
+  return {
+    height: pixelHeight,
+    uri: `data:image/png;base64,${surface.makeImageSnapshot().encodeToBase64(ImageFormat.PNG, 100)}`,
+    width: pixelWidth,
+  };
+}
+
+function truncateStopLabel(value: string) {
+  const trimmed = value.trim();
+
+  if (trimmed.length <= STOP_LABEL_MAX_CHARS) {
+    return trimmed;
+  }
+
+  return `${trimmed.slice(0, STOP_LABEL_MAX_CHARS - 1).trimEnd()}…`;
 }
 
 function getTrackedVehicleMarkerId(vehicle: TrackedTransitVehicle) {
@@ -2038,13 +2306,54 @@ function getVehicleMarkerLabel(routeType: TrackedTransitVehicle["routeType"]) {
   return "?";
 }
 
-function createTransitVehicleMarkerDataUri(vehicle: TrackedTransitVehicle) {
+function createVehicleMarkerImage(
+  vehicle: TrackedTransitVehicle,
+): MarkerImage | null {
   const color = normalizeMapRouteColor(vehicle.color);
   const label = getVehicleMarkerLabel(vehicle.routeType);
-  const center = VEHICLE_MARKER_SIZE / 2;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${VEHICLE_MARKER_SIZE}" height="${VEHICLE_MARKER_SIZE}" viewBox="0 0 ${VEHICLE_MARKER_SIZE} ${VEHICLE_MARKER_SIZE}"><circle cx="${center}" cy="${center}" r="20" fill="${color}"/><circle cx="${center}" cy="${center}" r="20" fill="none" stroke="${VEHICLE_MARKER_TEXT_COLOR}" stroke-width="3"/><text x="${center}" y="${center}" dy=".35em" text-anchor="middle" font-family="Arial, sans-serif" font-size="18" font-weight="700" fill="${VEHICLE_MARKER_TEXT_COLOR}">${label}</text></svg>`;
+  const scale = Math.min(Math.max(PixelRatio.get(), 1), 3);
+  const pixelSize = Math.ceil(VEHICLE_MARKER_SIZE * scale);
+  const surface = Skia.Surface.Make(pixelSize, pixelSize);
 
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  if (!surface) {
+    return null;
+  }
+
+  const canvas = surface.getCanvas();
+  canvas.scale(scale, scale);
+
+  const center = VEHICLE_MARKER_SIZE / 2;
+
+  const fillPaint = Skia.Paint();
+  fillPaint.setAntiAlias(true);
+  fillPaint.setColor(Skia.Color(color));
+  canvas.drawCircle(center, center, 20, fillPaint);
+
+  const ringPaint = Skia.Paint();
+  ringPaint.setAntiAlias(true);
+  ringPaint.setStyle(PaintStyle.Stroke);
+  ringPaint.setStrokeWidth(3);
+  ringPaint.setColor(Skia.Color(VEHICLE_MARKER_TEXT_COLOR));
+  canvas.drawCircle(center, center, 20, ringPaint);
+
+  const font = getMarkerFont(18);
+  const metrics = font.getMetrics();
+  const textPaint = Skia.Paint();
+  textPaint.setAntiAlias(true);
+  textPaint.setColor(Skia.Color(VEHICLE_MARKER_TEXT_COLOR));
+  canvas.drawText(
+    label,
+    getCenteredTextX(font, label, center),
+    center - (metrics.ascent + metrics.descent) / 2,
+    textPaint,
+    font,
+  );
+
+  return {
+    height: pixelSize,
+    uri: `data:image/png;base64,${surface.makeImageSnapshot().encodeToBase64(ImageFormat.PNG, 100)}`,
+    width: pixelSize,
+  };
 }
 
 function normalizeMapRouteColor(color: string | null) {

@@ -1,5 +1,5 @@
 import type { ColorSchemeName } from "react-native";
-import { Platform, PlatformColor } from "react-native";
+import { Platform, PlatformColor, useColorScheme } from "react-native";
 
 export function getSettingsScreenBackgroundColor(colorScheme: ColorSchemeName) {
   if (Platform.OS === "ios") {
@@ -45,13 +45,12 @@ export const defaultBackgroundColor = (
       : "white"
 ) as string;
 
-export const settingsScreenBackgroundColor = (
+export const settingsScreenBackgroundColor =
   Platform.OS === "ios"
     ? PlatformColor("systemGroupedBackground")
     : Platform.OS === "android"
       ? PlatformColor("?android:attr/colorBackground")
-      : "white"
-) as string;
+      : "white";
 
 export const secondaryCardBackgroundColor = (
   Platform.OS === "ios"
@@ -88,3 +87,39 @@ export const secondaryTextColor = (
       ? PlatformColor("?android:attr/textColorSecondary")
       : "gray"
 ) as string;
+
+/**
+ * Colors resolved to plain values for use inside `@expo/ui` components.
+ *
+ * On Android, the Jetpack Compose bridge backing `@expo/ui` views cannot
+ * deserialize a `PlatformColor` (it arrives as a native Map and throws
+ * "Unknown argument type: Map" / "cannot be cast from ReadableNativeMap"),
+ * so we hand it concrete hex strings instead. iOS keeps the dynamic
+ * `PlatformColor` values, which SwiftUI resolves natively. The hook reads
+ * `useColorScheme()` so the values stay reactive to in-app theme changes.
+ */
+export interface NativeColors {
+  settingsScreenBackgroundColor: string;
+  secondaryTextColor: string;
+}
+
+function getAndroidSecondaryTextColor(colorScheme: ColorSchemeName) {
+  return colorScheme === "dark" ? "#9ca3af" : "#6b7280";
+}
+
+export function useNativeColors(): NativeColors {
+  const colorScheme = useColorScheme();
+
+  if (Platform.OS === "android") {
+    return {
+      settingsScreenBackgroundColor:
+        getSettingsScreenBackgroundColor(colorScheme),
+      secondaryTextColor: getAndroidSecondaryTextColor(colorScheme),
+    };
+  }
+
+  return {
+    settingsScreenBackgroundColor: settingsScreenBackgroundColor as string,
+    secondaryTextColor,
+  };
+}
