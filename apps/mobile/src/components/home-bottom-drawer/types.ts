@@ -117,6 +117,7 @@ export interface ArrivalGroup {
 
 export interface DrawerDragHandleProps {
   panHandlers: GestureResponderHandlers;
+  scrollEnabled: boolean;
 }
 
 export interface SelectedStopDrawerContentProps {
@@ -137,7 +138,9 @@ export interface SelectedStopDrawerContentProps {
   onTrackedVehicleChange: (vehicle: TrackedTransitVehicle | null) => void;
   onSearchBlur: () => void;
   onSearchFocus: () => void;
+  onSearchScrollDismiss: () => void;
   panHandlers: GestureResponderHandlers;
+  scrollEnabled: boolean;
   searchInputRef: RefObject<TextInput | null>;
   scrollBottomPadding: number;
   stopCode: string | null;

@@ -68,6 +68,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-secure-store",
     "expo-web-browser",
     "expo-localization",
+    "expo-notifications",
+    "expo-background-task",
     [
       "expo-updates",
       {

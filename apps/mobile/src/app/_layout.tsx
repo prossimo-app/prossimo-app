@@ -34,6 +34,7 @@ import {
   AppBootstrapProvider,
   useAppBootstrap,
 } from "~/app-bootstrap/app-bootstrap-provider";
+import { syncStrikeNotificationsAsync } from "~/notifications/strike-notifications";
 import {
   OnboardingProvider,
   useOnboarding,
@@ -67,6 +68,10 @@ function RootLayout() {
       void SplashScreen.hideAsync();
     }
   }, [fontError, fontsLoaded]);
+
+  useEffect(() => {
+    void syncStrikeNotificationsAsync();
+  }, []);
 
   if (!fontsLoaded && !fontError) {
     return null;

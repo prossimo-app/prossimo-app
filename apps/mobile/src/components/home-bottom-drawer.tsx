@@ -17,7 +17,9 @@ import {
 import {
   Animated,
   PanResponder,
+  Platform,
   Pressable,
+  useColorScheme,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -42,11 +44,9 @@ import type {
 import type { SelectedStop } from "~/components/home-map";
 import type { RouterOutputs } from "~/utils/api";
 import { useAppBootstrap } from "~/app-bootstrap/app-bootstrap-provider";
+import { getStrikeTiming, isVisibleStrikeNotice } from "~/news/strike-notices";
 import { trpc, trpcClient } from "~/utils/api";
-import {
-  getStrikeTiming,
-  isVisibleStrikeNotice,
-} from "~/news/strike-notices";
+import { getFuzzyMatchScore } from "~/utils/fuzzy-search";
 import {
   createArrivalGroups,
   createDisplayArrivals,
@@ -63,7 +63,7 @@ const drawerHeaderGap = 20;
 const topDragHandleBottomPadding = 12;
 const nearbyStopRadiusMeters = 1_000;
 const nearbyStopLimit = 8;
-const searchStopLimit = 20;
+const searchStopLimit = 50;
 const routePageSize = 30;
 const earthRadiusMeters = 6_371_000;
 const springConfig = {
@@ -232,6 +232,7 @@ export function HomeBottomDrawer({
   const selectedStopRealtimeId = selectedStop?.stopCode ?? null;
   const isWatchingSelectedStop = Boolean(selectedStopRealtimeId);
   const isFullHeight = activeDrawerStop === "full";
+  const isContentScrollEnabled = activeDrawerStop !== "collapsed";
   const topDragHandleHeight = (isFullHeight ? top : 0) + 52;
   const targetOffset = getDrawerStopOffset(activeDrawerStop, drawerStops);
   const scrollBottomPadding = targetOffset + overdragResistance + bottom + 32;
@@ -486,6 +487,13 @@ export function HomeBottomDrawer({
     searchInputRef.current?.blur();
     void KeyboardController.dismiss();
   }, []);
+
+  const dismissSearchOnScroll = useCallback(() => {
+    // Clearing the focus-start stop keeps the drawer where it is while the
+    // keyboard collapses mid-scroll.
+    searchFocusStartStopRef.current = null;
+    blurSearchInput();
+  }, [blurSearchInput]);
 
   const setDrawerStop = useCallback(
     (nextStop: DrawerStop) => {
@@ -862,7 +870,9 @@ export function HomeBottomDrawer({
                   setDrawerStop("full");
                 }
               }}
+              onSearchScrollDismiss={dismissSearchOnScroll}
               panHandlers={panResponder.panHandlers}
+              scrollEnabled={isContentScrollEnabled}
               searchInputRef={searchInputRef}
               scrollBottomPadding={scrollBottomPadding}
               lastUpdatedAt={selectedStopLastUpdatedAt ?? null}
@@ -904,6 +914,7 @@ export function HomeBottomDrawer({
                   setDrawerStop("full");
                 }
               }}
+              onSearchScrollDismiss={dismissSearchOnScroll}
               onLinePress={handleDefaultLinePress}
               onLineBack={() => {
                 closeLineDetail();
@@ -932,6 +943,7 @@ export function HomeBottomDrawer({
               }}
               onStopPress={handleDefaultStopPress}
               panHandlers={panResponder.panHandlers}
+              scrollEnabled={isContentScrollEnabled}
               routeVehiclesPayload={routeVehiclesPayload}
               searchInputRef={searchInputRef}
               searchQuery={stopSearchQuery}
@@ -1003,7 +1015,7 @@ function searchStops(
     query: string;
   },
 ): DrawerNearbyStop[] {
-  const normalizedQuery = options.query.trim().toLowerCase();
+  const normalizedQuery = options.query.trim();
 
   if (!normalizedQuery) {
     return [];
@@ -1018,10 +1030,10 @@ function searchStops(
         ...stop.routes.map((route) => route.shortName),
       ]
         .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
+        .join(" ");
+      const matchScore = getFuzzyMatchScore(normalizedQuery, searchableText);
 
-      if (!searchableText.includes(normalizedQuery)) {
+      if (matchScore === 0) {
         return [];
       }
 
@@ -1035,10 +1047,14 @@ function searchStops(
           )
         : Number.POSITIVE_INFINITY;
 
-      return [{ ...stop, distanceMeters }];
+      return [{ ...stop, distanceMeters, matchScore }];
     })
-    .sort(compareDrawerStops)
-    .slice(0, options.limit);
+    .sort(
+      (left, right) =>
+        right.matchScore - left.matchScore || compareDrawerStops(left, right),
+    )
+    .slice(0, options.limit)
+    .map(({ matchScore: _matchScore, ...stop }) => stop);
 }
 
 function compareDrawerStops(left: DrawerNearbyStop, right: DrawerNearbyStop) {
@@ -1094,6 +1110,17 @@ function DrawerSurface({
   blurTarget?: RefObject<RNView | null>;
   cornerRadius: Animated.AnimatedInterpolation<number>;
 }) {
+  const colorScheme = useColorScheme();
+  // The Android blur implementation doesn't resolve the adaptive
+  // "systemMaterial" tint against the current color scheme, so pick the
+  // explicit variant there. iOS resolves it natively.
+  const tint =
+    Platform.OS === "android"
+      ? colorScheme === "dark"
+        ? "systemMaterialDark"
+        : "systemMaterialLight"
+      : "systemMaterial";
+
   return (
     <AnimatedBlurView
       blurMethod="dimezisBlurViewSdk31Plus"
@@ -1105,7 +1132,7 @@ function DrawerSurface({
         borderTopLeftRadius: cornerRadius,
         borderTopRightRadius: cornerRadius,
       }}
-      tint="systemMaterial"
+      tint={tint}
     />
   );
 }

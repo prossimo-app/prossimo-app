@@ -107,6 +107,32 @@ function getAndroidSecondaryTextColor(colorScheme: ColorSchemeName) {
   return colorScheme === "dark" ? "#9ca3af" : "#6b7280";
 }
 
+/**
+ * Foreground (primary text) color resolved to a concrete value.
+ *
+ * On Android, `PlatformColor("?android:attr/textColorPrimary")` resolves
+ * against the hosting activity's theme rather than the in-app color scheme,
+ * so it can come back blended with the background and render invisible text.
+ * We hand Android concrete hex values keyed off `useColorScheme()` instead,
+ * mirroring the secondary-text handling above. iOS keeps the dynamic
+ * `PlatformColor("label")`, which resolves natively.
+ */
+export function getForegroundColor(colorScheme: ColorSchemeName) {
+  if (Platform.OS === "android") {
+    return colorScheme === "dark" ? "#f9fafb" : "#111827";
+  }
+
+  return defaultForegroundColor;
+}
+
+export function getSecondaryTextColor(colorScheme: ColorSchemeName) {
+  if (Platform.OS === "android") {
+    return getAndroidSecondaryTextColor(colorScheme);
+  }
+
+  return secondaryTextColor;
+}
+
 export function useNativeColors(): NativeColors {
   const colorScheme = useColorScheme();
 

@@ -9,8 +9,8 @@ import { AppButton } from "~/components/app-button";
 import { useOnboarding } from "~/onboarding/onboarding-provider";
 import {
   defaultBackgroundColor,
-  defaultForegroundColor,
-  secondaryTextColor,
+  getForegroundColor,
+  getSecondaryTextColor,
 } from "~/theme/native-colors";
 import locationPinDarkImage from "../../../assets/empty/location-pin-dark.png";
 import locationPinImage from "../../../assets/empty/location-pin.png";
@@ -48,13 +48,13 @@ export default function LocationOnboardingScreen() {
         <View className="max-w-[320px] gap-3">
           <Text
             className="text-center font-sans text-3xl font-bold"
-            style={{ color: defaultForegroundColor }}
+            style={{ color: getForegroundColor(colorScheme) }}
           >
             {t("onboarding.location.title")}
           </Text>
           <Text
             className="text-center font-sans text-lg"
-            style={{ color: secondaryTextColor }}
+            style={{ color: getSecondaryTextColor(colorScheme) }}
           >
             {t("onboarding.location.subtitle")}
           </Text>

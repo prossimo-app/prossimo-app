@@ -55,6 +55,16 @@ export function isVisibleStrikeNotice(strike: StrikeNotice, now = new Date()) {
   return startsAt ? startsAt >= startOfLocalDay(now) : false;
 }
 
+export function isImminentStrikeNotice(strike: StrikeNotice, now = new Date()) {
+  if (!isVisibleStrikeNotice(strike, now)) {
+    return false;
+  }
+
+  const timing = getStrikeTiming(strike, now);
+
+  return timing === "today" || timing === "tomorrow";
+}
+
 export function getStrikeTiming(strike: StrikeNotice, now = new Date()) {
   const startsAt = getStrikeStartDate(strike);
 

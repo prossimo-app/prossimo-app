@@ -1,7 +1,13 @@
 import type { Coordinates } from "expo-maps";
 import type { View as RNView } from "react-native";
 import { useEffect, useRef, useState } from "react";
-import { Platform, Pressable, StyleSheet, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  StyleSheet,
+  useColorScheme,
+  View,
+} from "react-native";
 import { BlurTargetView, BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { router, Stack } from "expo-router";
@@ -22,9 +28,10 @@ import type { SelectedStop } from "~/components/home-map";
 import { HomeBottomDrawer } from "~/components/home-bottom-drawer";
 import { parseRouteVehiclesPayload } from "~/components/home-bottom-drawer/arrival-model";
 import { HomeMap } from "~/components/home-map";
-import { isVisibleStrikeNotice } from "~/news/strike-notices";
+import { isImminentStrikeNotice } from "~/news/strike-notices";
 import {
   defaultForegroundColor,
+  getPrimaryIconColor,
   toolbarButtonBackgroundColor,
   toolbarButtonBorderColor,
 } from "~/theme/native-colors";
@@ -178,6 +185,11 @@ export default function Index() {
 
 function HomeToolbar() {
   const { t } = useTranslation();
+  const colorScheme = useColorScheme();
+  // On Android the toolbar doesn't follow the in-app Appearance override, so
+  // tint the icons explicitly. iOS resolves its tint natively.
+  const toolbarTintColor =
+    Platform.OS === "android" ? getPrimaryIconColor(colorScheme) : undefined;
   const newsLabel = t("home.toolbar.news");
   const settingsLabel = t("home.toolbar.settings");
   const newsQuery = useQuery({
@@ -187,11 +199,9 @@ function HomeToolbar() {
     }),
     staleTime: 5 * 60 * 1000,
   });
-  const hasActiveStrikeNotice =
-    newsQuery.data?.strikes.some((strike) => isVisibleStrikeNotice(strike)) ??
+  const hasNewsBadge =
+    newsQuery.data?.strikes.some((strike) => isImminentStrikeNotice(strike)) ??
     false;
-  const hasSeverityOneNews = (newsQuery.data?.globalNews.length ?? 0) > 0;
-  const hasNewsBadge = hasActiveStrikeNotice || hasSeverityOneNews;
 
   if (Platform.OS === "ios" && !isLiquidGlassAvailable()) {
     return (
@@ -218,7 +228,7 @@ function HomeToolbar() {
   }
 
   return (
-    <Stack.Toolbar placement="left">
+    <Stack.Toolbar placement="left" tintColor={toolbarTintColor}>
       <Stack.Toolbar.Button
         accessibilityLabel={newsLabel}
         icon={Platform.OS === "ios" ? "newspaper" : NewspaperIcon}

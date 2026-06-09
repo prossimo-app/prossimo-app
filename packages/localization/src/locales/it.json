@@ -99,6 +99,7 @@
       "noMatchingStopsDescription": "Prova con il nome della fermata, il codice fermata o il numero della linea.",
       "stop": "Fermata",
       "stopRoutes": "Linee {{routes}}",
+      "loadMoreStops": "Carica altre",
       "lines": "Linee",
       "linesDescription": "Le linee sono in ordine alfabetico. Caricane altre per continuare.",
       "matchingLinesDescription": "Linee corrispondenti alla ricerca.",
@@ -193,6 +194,26 @@
         "incoming": "Sciopero in arrivo il {{date}}, tocca per leggere",
         "incomingWithoutDate": "Sciopero in arrivo, tocca per leggere"
       }
+    },
+    "notifications": {
+      "enableButton": "Attiva notifiche scioperi",
+      "disableButton": "Disattiva notifiche scioperi",
+      "channelName": "Avvisi scioperi",
+      "permissionPromptTitle": "Resta aggiornato sugli scioperi",
+      "permissionPromptMessage": "Prossimo puo avvisarti quando uno sciopero dei trasporti e previsto per oggi o domani. Consenti le notifiche per ricevere questi avvisi.",
+      "allow": "Consenti",
+      "notNow": "Non ora",
+      "openSettings": "Apri impostazioni",
+      "permissionBlockedTitle": "Notifiche disattivate",
+      "permissionBlockedMessage": "Le notifiche sono disattivate per Prossimo. Attivale nelle impostazioni di sistema per ricevere gli avvisi sugli scioperi.",
+      "permissionDeniedToast": "Permesso per le notifiche non concesso.",
+      "enabledToast": "Notifiche scioperi attivate.",
+      "disabledToast": "Notifiche scioperi disattivate.",
+      "errorToast": "Impossibile aggiornare le notifiche scioperi. Riprova.",
+      "todayTitle": "Sciopero oggi",
+      "todayBody": "Uno sciopero dei trasporti e previsto per oggi. Apri Prossimo per i dettagli.",
+      "tomorrowTitle": "Sciopero domani",
+      "tomorrowBody": "Uno sciopero dei trasporti e previsto per domani. Apri Prossimo per i dettagli."
     }
   },
   "onboarding": {
@@ -226,16 +247,6 @@
       "preferences": "Preferenze",
       "privacy": "Privacy",
       "legal": "Legale"
-    },
-    "mapLimit": {
-      "label": "Mantieni la camera dentro Torino",
-      "accessibilityLabel": "Limite mappa",
-      "toasts": {
-        "turnedOffTitle": "Limite camera Torino disattivato",
-        "cannotTurnOnTitle": "Limite camera Torino non disponibile",
-        "outsideTurinDescription": "La tua posizione attuale e fuori Torino.",
-        "locationUnavailableDescription": "Non e stato possibile controllare la tua posizione attuale."
-      }
     },
     "theme": {
       "title": "Tema",

@@ -9,8 +9,8 @@ import { useTranslation } from "@prossimo-app/localization";
 import { AppButton } from "~/components/app-button";
 import {
   defaultBackgroundColor,
-  defaultForegroundColor,
-  secondaryTextColor,
+  getForegroundColor,
+  getSecondaryTextColor,
 } from "~/theme/native-colors";
 import trackingDarkImage from "../../../assets/empty/tracking-dark.png";
 import trackingImage from "../../../assets/empty/tracking.png";
@@ -48,13 +48,13 @@ export default function TrackingOnboardingScreen() {
         <View className="max-w-[320px] gap-3">
           <Text
             className="text-center font-sans text-3xl font-bold"
-            style={{ color: defaultForegroundColor }}
+            style={{ color: getForegroundColor(colorScheme) }}
           >
             {t("onboarding.tracking.title")}
           </Text>
           <Text
             className="text-center font-sans text-lg"
-            style={{ color: secondaryTextColor }}
+            style={{ color: getSecondaryTextColor(colorScheme) }}
           >
             {t("onboarding.tracking.subtitle")}
           </Text>

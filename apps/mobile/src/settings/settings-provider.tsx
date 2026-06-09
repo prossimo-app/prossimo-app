@@ -20,7 +20,6 @@ import {
 import type { SupportedLanguage } from "@prossimo-app/localization";
 import { i18n, normalizeLanguage } from "@prossimo-app/localization";
 
-const limitMapToTorinoStorageKey = "settings.limitMapToTorino";
 const shareAppUsageStorageKey = "settings.shareAppUsage";
 const languageStorageKey = "settings.language";
 const themeStorageKey = "settings.theme";
@@ -35,11 +34,9 @@ interface SettingsContextValue {
   isLocationPermissionGranted: boolean;
   isLocationSharingEnabled: boolean;
   trackingPermission: PermissionResponse | null;
-  isMapLimitedToTorino: boolean;
   isShareAppUsageEnabled: boolean;
   language: SupportedLanguage;
   theme: ThemeOption;
-  setIsMapLimitedToTorino: (value: boolean) => Promise<void>;
   setIsShareAppUsageEnabled: (value: boolean) => Promise<void>;
   setLanguage: (value: SupportedLanguage) => Promise<void>;
   setTheme: (value: ThemeOption) => Promise<void>;
@@ -70,7 +67,6 @@ export function SettingsProvider({ children }: PropsWithChildren) {
     useState(false);
   const [trackingPermission, setTrackingPermission] =
     useState<PermissionResponse | null>(null);
-  const [isMapLimitedToTorino, setIsMapLimitedToTorinoState] = useState(true);
   const [isShareAppUsageEnabled, setIsShareAppUsageEnabledState] =
     useState(false);
   const [language, setLanguageState] = useState<SupportedLanguage>(
@@ -107,13 +103,11 @@ export function SettingsProvider({ children }: PropsWithChildren) {
     async function loadSettings() {
       try {
         const [
-          limitMapToTorinoValue,
           savedLanguage,
           savedTheme,
           locationPermission,
           trackingPermission,
         ] = await Promise.all([
-          SecureStore.getItemAsync(limitMapToTorinoStorageKey),
           SecureStore.getItemAsync(languageStorageKey),
           SecureStore.getItemAsync(themeStorageKey),
           Location.getForegroundPermissionsAsync(),
@@ -131,7 +125,6 @@ export function SettingsProvider({ children }: PropsWithChildren) {
         setThemeState(nextTheme);
         await i18n.changeLanguage(nextLanguage);
         applyTheme(nextTheme);
-        setIsMapLimitedToTorinoState(limitMapToTorinoValue !== "false");
         setIsShareAppUsageEnabledState(
           trackingPermission.status === PermissionStatus.GRANTED,
         );
@@ -167,11 +160,6 @@ export function SettingsProvider({ children }: PropsWithChildren) {
       subscription.remove();
     };
   }, [refreshLocationPermission, refreshTrackingPermission]);
-
-  const setIsMapLimitedToTorino = useCallback(async (value: boolean) => {
-    await SecureStore.setItemAsync(limitMapToTorinoStorageKey, String(value));
-    setIsMapLimitedToTorinoState(value);
-  }, []);
 
   const setIsShareAppUsageEnabled = useCallback(async (value: boolean) => {
     if (!value) {
@@ -211,11 +199,9 @@ export function SettingsProvider({ children }: PropsWithChildren) {
       isLocationPermissionGranted,
       isLocationSharingEnabled,
       trackingPermission,
-      isMapLimitedToTorino,
       isShareAppUsageEnabled,
       language,
       theme,
-      setIsMapLimitedToTorino,
       setIsShareAppUsageEnabled,
       setLanguage,
       setTheme,
@@ -227,11 +213,9 @@ export function SettingsProvider({ children }: PropsWithChildren) {
       isLocationPermissionGranted,
       isLocationSharingEnabled,
       trackingPermission,
-      isMapLimitedToTorino,
       isShareAppUsageEnabled,
       language,
       theme,
-      setIsMapLimitedToTorino,
       setIsShareAppUsageEnabled,
       setLanguage,
       setTheme,

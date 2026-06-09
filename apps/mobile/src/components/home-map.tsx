@@ -7,6 +7,7 @@ import {
   PixelRatio,
   Platform,
   Text,
+  useColorScheme,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -20,7 +21,6 @@ import { Image } from "expo-image";
 import * as Location from "expo-location";
 import { AppleMaps, GoogleMaps } from "expo-maps";
 import { skipToken, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner-native";
 
 import { useTranslation } from "@prossimo-app/localization";
 
@@ -31,11 +31,7 @@ import type {
 } from "~/components/home-bottom-drawer/types";
 import type { RouterOutputs } from "~/utils/api";
 import { useAppBootstrap } from "~/app-bootstrap/app-bootstrap-provider";
-import {
-  clampToTorino,
-  isInsideTorino,
-  torinoCenter,
-} from "~/map/torino-bounds";
+import { torinoCenter } from "~/map/torino-bounds";
 import { useSettings } from "~/settings/settings-provider";
 import { trpc } from "~/utils/api";
 
@@ -160,13 +156,12 @@ export function HomeMap({
   trackedVehicle = null,
 }: HomeMapProps) {
   const { t } = useTranslation();
+  const colorScheme = useColorScheme();
   const { appBootstrap } = useAppBootstrap();
   const {
     isLocationSharingEnabled,
-    isMapLimitedToTorino,
     locationPermission,
     refreshLocationPermission,
-    setIsMapLimitedToTorino,
   } = useSettings();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const [location, setLocation] = useState<Coordinates | null>(null);
@@ -210,11 +205,7 @@ export function HomeMap({
   const hasRequestedAskNextTimePermission = useRef(false);
   const isNativeLocationEnabled = isLocationSharingEnabled;
   const visibleLocation =
-    isLocationSharingEnabled &&
-    location &&
-    (!isMapLimitedToTorino || isInsideTorino(location))
-      ? location
-      : null;
+    isLocationSharingEnabled && location ? location : null;
   const cameraPosition = useMemo(
     () =>
       getInitialCameraPosition({
@@ -270,10 +261,7 @@ export function HomeMap({
         },
       );
       const cameraPosition = {
-        coordinates:
-          isMapLimitedToTorino && !isInsideTorino(coordinates)
-            ? clampToTorino(coordinates)
-            : coordinates,
+        coordinates,
         duration: getCameraAnimationDuration(),
         zoom,
       };
@@ -352,14 +340,7 @@ export function HomeMap({
         viewportRef: nearbyStopsViewportRef,
       });
     }
-  }, [
-    isMapLimitedToTorino,
-    selectedLine,
-    selectedStop,
-    trackedVehicle,
-    windowHeight,
-    windowWidth,
-  ]);
+  }, [selectedLine, selectedStop, trackedVehicle, windowHeight, windowWidth]);
 
   useEffect(() => {
     if (selectedStop || !selectedStopMarkerIdRef.current) {
@@ -413,10 +394,7 @@ export function HomeMap({
       },
     );
     const cameraPosition = {
-      coordinates:
-        isMapLimitedToTorino && !isInsideTorino(coordinates)
-          ? clampToTorino(coordinates)
-          : coordinates,
+      coordinates,
       duration: getCameraAnimationDuration(),
       zoom: SELECTED_STOP_MARKER_ZOOM,
     };
@@ -430,13 +408,7 @@ export function HomeMap({
       setViewport: setNearbyStopsViewport,
       viewportRef: nearbyStopsViewportRef,
     });
-  }, [
-    isMapLimitedToTorino,
-    selectedLine,
-    selectedStop,
-    windowHeight,
-    windowWidth,
-  ]);
+  }, [selectedLine, selectedStop, windowHeight, windowWidth]);
 
   const activeFeedVersionId = appBootstrap?.activeFeedVersionId;
   const isNearbyStopsQueryTooWide =
@@ -739,16 +711,11 @@ export function HomeMap({
     visibleStopMarkers,
   ]);
   const handleCameraMove = useCallback(
-    (event: CameraMoveEvent, mapRef: MapCameraRef | null) => {
+    (event: CameraMoveEvent) => {
       currentCameraPositionRef.current = {
         coordinates: event.coordinates,
         zoom: event.zoom,
       };
-
-      if (isMapLimitedToTorino && !isInsideTorino(event.coordinates)) {
-        keepCameraInTorino(event, mapRef);
-        return;
-      }
 
       updateNearbyStopsViewport(event, {
         screenHeight: windowHeight,
@@ -757,19 +724,7 @@ export function HomeMap({
         viewportRef: nearbyStopsViewportRef,
       });
     },
-    [isMapLimitedToTorino, windowHeight, windowWidth],
-  );
-  const handleAppleCameraMove = useCallback(
-    (event: CameraMoveEvent) => {
-      handleCameraMove(event, appleMapRef.current);
-    },
-    [handleCameraMove],
-  );
-  const handleGoogleCameraMove = useCallback(
-    (event: CameraMoveEvent) => {
-      handleCameraMove(event, googleMapRef.current);
-    },
-    [handleCameraMove],
+    [windowHeight, windowWidth],
   );
   const handleStopMarkerClick = useCallback(
     (
@@ -873,10 +828,7 @@ export function HomeMap({
         },
       );
       const cameraPosition = {
-        coordinates:
-          isMapLimitedToTorino && !isInsideTorino(coordinates)
-            ? clampToTorino(coordinates)
-            : coordinates,
+        coordinates,
         duration: getCameraAnimationDuration(),
         zoom: SELECTED_STOP_MARKER_ZOOM,
       };
@@ -899,7 +851,6 @@ export function HomeMap({
       });
     },
     [
-      isMapLimitedToTorino,
       onRouteVehiclePress,
       onStopSelectionChange,
       routeVehiclesPayload,
@@ -1162,27 +1113,6 @@ export function HomeMap({
         longitude: currentLocation.coords.longitude,
       };
 
-      if (isMapLimitedToTorino && !isInsideTorino(nextLocation)) {
-        setLocation(nextLocation);
-        updateNearbyStopsViewport(
-          getInitialCameraPosition({
-            screenHeight: windowHeight,
-            visibleLocation: nextLocation,
-          }),
-          {
-            screenHeight: windowHeight,
-            screenWidth: windowWidth,
-            setViewport: setNearbyStopsViewport,
-            viewportRef: nearbyStopsViewportRef,
-          },
-        );
-        await setIsMapLimitedToTorino(false);
-        toast.warning(t("settings.mapLimit.toasts.turnedOffTitle"), {
-          description: t("settings.mapLimit.toasts.outsideTurinDescription"),
-        });
-        return;
-      }
-
       setLocation(nextLocation);
       updateNearbyStopsViewport(
         getInitialCameraPosition({
@@ -1204,11 +1134,8 @@ export function HomeMap({
       isMounted = false;
     };
   }, [
-    isMapLimitedToTorino,
     locationPermission,
     refreshLocationPermission,
-    setIsMapLimitedToTorino,
-    t,
     windowHeight,
     windowWidth,
   ]);
@@ -1220,7 +1147,7 @@ export function HomeMap({
           ref={appleMapRef as Ref<React.ElementRef<typeof AppleMaps.View>>}
           cameraPosition={cameraPosition}
           markers={appleMarkers}
-          onCameraMove={handleAppleCameraMove}
+          onCameraMove={handleCameraMove}
           onMapClick={handleAppleMapClick}
           onMarkerClick={handleAppleMarkerClick}
           polylines={routeShapePolylines}
@@ -1252,8 +1179,13 @@ export function HomeMap({
         <GoogleMaps.View
           ref={googleMapRef as Ref<React.ElementRef<typeof GoogleMaps.View>>}
           cameraPosition={cameraPosition}
+          colorScheme={
+            colorScheme === "dark"
+              ? GoogleMaps.MapColorScheme.DARK
+              : GoogleMaps.MapColorScheme.LIGHT
+          }
           markers={googleMarkers}
-          onCameraMove={handleGoogleCameraMove}
+          onCameraMove={handleCameraMove}
           onMapClick={handleGoogleMapClick}
           onMarkerClick={handleGoogleMarkerClick}
           polylines={routeShapePolylines}
@@ -1272,10 +1204,6 @@ export function HomeMap({
               ]),
             },
             mapType: GoogleMaps.MapType.NORMAL,
-            minZoomPreference:
-              isMapLimitedToTorino && routeShapePolylines.length === 0
-                ? 12
-                : undefined,
             selectionEnabled: false,
           }}
           style={{ flex: 1 }}
@@ -1434,20 +1362,6 @@ function getCameraAnimationDuration() {
   }
 
   return SELECTED_STOP_CAMERA_ANIMATION_DURATION_MS;
-}
-
-function keepCameraInTorino(
-  event: CameraMoveEvent,
-  mapRef: MapCameraRef | null,
-) {
-  if (isInsideTorino(event.coordinates)) {
-    return;
-  }
-
-  animateCamera(mapRef, {
-    coordinates: clampToTorino(event.coordinates),
-    zoom: Math.max(event.zoom, 12),
-  });
 }
 
 function updateNearbyStopsViewport(

@@ -99,6 +99,7 @@
       "noMatchingStopsDescription": "Try a stop name, stop code, or line number.",
       "stop": "Stop",
       "stopRoutes": "Lines {{routes}}",
+      "loadMoreStops": "Load more",
       "lines": "Lines",
       "linesDescription": "Lines are sorted alphabetically. Load more to keep browsing.",
       "matchingLinesDescription": "Lines matching your search.",
@@ -193,6 +194,26 @@
         "incoming": "Incoming strike on {{date}}, press to read more",
         "incomingWithoutDate": "Incoming strike, press to read more"
       }
+    },
+    "notifications": {
+      "enableButton": "Enable strike notifications",
+      "disableButton": "Disable strike notifications",
+      "channelName": "Strike alerts",
+      "permissionPromptTitle": "Stay ahead of strikes",
+      "permissionPromptMessage": "Prossimo can notify you when a public transport strike is planned for today or tomorrow. Allow notifications to receive these alerts.",
+      "allow": "Allow",
+      "notNow": "Not now",
+      "openSettings": "Open settings",
+      "permissionBlockedTitle": "Notifications are off",
+      "permissionBlockedMessage": "Notifications are disabled for Prossimo. Enable them in system settings to receive strike alerts.",
+      "permissionDeniedToast": "Notification permission was not granted.",
+      "enabledToast": "Strike notifications enabled.",
+      "disabledToast": "Strike notifications disabled.",
+      "errorToast": "Could not update strike notifications. Try again.",
+      "todayTitle": "Strike today",
+      "todayBody": "A public transport strike is planned for today. Open Prossimo for details.",
+      "tomorrowTitle": "Strike tomorrow",
+      "tomorrowBody": "A public transport strike is planned for tomorrow. Open Prossimo for details."
     }
   },
   "onboarding": {
@@ -226,16 +247,6 @@
       "preferences": "Preferences",
       "privacy": "Privacy",
       "legal": "Legal"
-    },
-    "mapLimit": {
-      "label": "Keep the camera inside Turin",
-      "accessibilityLabel": "Map limit",
-      "toasts": {
-        "turnedOffTitle": "Turin camera limit turned off",
-        "cannotTurnOnTitle": "Turin camera limit unavailable",
-        "outsideTurinDescription": "Your current location is outside Turin.",
-        "locationUnavailableDescription": "Your current location could not be checked."
-      }
     },
     "theme": {
       "title": "Theme",

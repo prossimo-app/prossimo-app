@@ -9,6 +9,7 @@ import type {
   Translate,
 } from "./types";
 import type { SelectedStop } from "~/components/home-map";
+import { getFuzzyMatchScore } from "~/utils/fuzzy-search";
 
 const pastArrivalGraceSeconds = 60;
 
@@ -183,14 +184,18 @@ export function filterArrivalGroups(groups: ArrivalGroup[], query: string) {
   return groups.filter((group) => {
     const routeText = normalizeLineSearchValue(`${group.label} ${group.key}`);
 
-    if (routeText.includes(normalizedQuery)) {
+    if (getFuzzyMatchScore(normalizedQuery, routeText) > 0) {
       return true;
     }
 
-    return group.arrivals.some((arrival) =>
-      normalizeLineSearchValue(
-        `${arrival.routeShortName} ${arrival.routeId} ${arrival.tripHeadsign ?? ""}`,
-      ).includes(normalizedQuery),
+    return group.arrivals.some(
+      (arrival) =>
+        getFuzzyMatchScore(
+          normalizedQuery,
+          normalizeLineSearchValue(
+            `${arrival.routeShortName} ${arrival.routeId} ${arrival.tripHeadsign ?? ""}`,
+          ),
+        ) > 0,
     );
   });
 }

@@ -49,6 +49,7 @@ interface DefaultDrawerContentProps extends DrawerDragHandleProps {
   onSearchBlur: () => void;
   onSearchChange: (value: string) => void;
   onSearchFocus: () => void;
+  onSearchScrollDismiss: () => void;
   onLineBack: () => void;
   onLoadMoreLines: () => void;
   onRouteVehiclePress?: (vehicle: RouteVehicle) => void;
@@ -88,6 +89,8 @@ interface DefaultDrawerContentProps extends DrawerDragHandleProps {
   trackedVehicle?: TrackedTransitVehicle | null;
 }
 
+const searchStopPageSize = 10;
+
 export function DefaultDrawerContent({
   currentTimeMs,
   hasMoreLines,
@@ -101,6 +104,7 @@ export function DefaultDrawerContent({
   onSearchBlur,
   onSearchChange,
   onSearchFocus,
+  onSearchScrollDismiss,
   onLineBack,
   onLoadMoreLines,
   onRouteVehiclePress,
@@ -116,6 +120,7 @@ export function DefaultDrawerContent({
   onStopTrackedVehicleChange,
   panHandlers,
   routeVehiclesPayload = null,
+  scrollEnabled,
   searchInputRef,
   searchQuery,
   searchResults,
@@ -130,7 +135,19 @@ export function DefaultDrawerContent({
     null,
   );
   const isSearching = searchQuery.trim().length > 0;
-  const displayedStops = isSearching ? searchResults : nearbyStops;
+  const [visibleStopCount, setVisibleStopCount] = useState(searchStopPageSize);
+  const [previousSearchQuery, setPreviousSearchQuery] = useState(searchQuery);
+
+  if (previousSearchQuery !== searchQuery) {
+    setPreviousSearchQuery(searchQuery);
+    setVisibleStopCount(searchStopPageSize);
+  }
+
+  const displayedStops = isSearching
+    ? searchResults.slice(0, visibleStopCount)
+    : nearbyStops;
+  const hasMoreSearchResults =
+    isSearching && searchResults.length > visibleStopCount;
   const displayedStopDetail = stopDetail.selectedStop ?? selectedStop;
   const selectedLineRouteVehiclesPayload =
     selectedLine && routeVehiclesPayload?.routeId === selectedLine.routeId
@@ -240,126 +257,149 @@ export function DefaultDrawerContent({
           />
         </View>
 
-        <ScrollView
+        <View
+          {...(scrollEnabled ? undefined : panHandlers)}
           className="min-h-0 flex-1"
-          contentContainerClassName="gap-2 px-2"
-          contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
         >
-          {hasTodayStrike ? <TodayStrikeAlert /> : null}
-          <View className="flex-row items-center gap-2 px-1">
-            <Text className="text-foreground flex-1 font-sans text-base font-bold">
-              {isSearching
-                ? t("home.drawer.stops")
-                : t("home.drawer.nearbyStops")}
-            </Text>
-            {!isSearching ? (
-              <Text className="text-muted-foreground font-sans text-xs font-semibold">
-                {t("home.drawer.nearbyRadius", {
-                  distance: formatDistance(nearbyRadiusMeters),
-                })}
-              </Text>
-            ) : null}
-          </View>
-
-          {displayedStops.length > 0 ? (
-            displayedStops.map((stop) => (
-              <StopRow
-                key={stop.stopId}
-                onPress={(selectedStop) => {
-                  pageTransition.stopAnimation();
-                  setSelectedStop(selectedStop);
-                  onStopPress(selectedStop);
-                  animatePageTransition(1);
-                }}
-                stop={stop}
-              />
-            ))
-          ) : (
-            <View className="bg-card rounded-2xl px-4 py-5">
-              <Text className="text-foreground font-sans text-base font-bold">
+          <ScrollView
+            className="min-h-0 flex-1"
+            contentContainerClassName="gap-2 px-2"
+            contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
+            keyboardShouldPersistTaps="handled"
+            onScrollBeginDrag={onSearchScrollDismiss}
+            scrollEnabled={scrollEnabled}
+            showsVerticalScrollIndicator={false}
+          >
+            {hasTodayStrike ? <TodayStrikeAlert /> : null}
+            <View className="flex-row items-center gap-2 px-1">
+              <Text className="text-foreground flex-1 font-sans text-base font-bold">
                 {isSearching
-                  ? t("home.drawer.noMatchingStops")
-                  : t("home.drawer.noNearbyStops")}
-              </Text>
-              <Text className="text-muted-foreground mt-1 font-sans text-sm">
-                {isSearching
-                  ? t("home.drawer.noMatchingStopsDescription")
-                  : t("home.drawer.noNearbyStopsDescription")}
+                  ? t("home.drawer.stops")
+                  : t("home.drawer.nearbyStops")}
               </Text>
               {!isSearching ? (
-                <Pressable
-                  accessibilityRole="button"
-                  className="mt-4 self-start rounded-full px-0 py-1 active:opacity-70"
-                  onPress={onShowLocationTutorial}
-                >
-                  <Text className="text-primary font-sans text-sm font-bold">
-                    {t("home.drawer.locationTutorialAction")}
-                  </Text>
-                </Pressable>
+                <Text className="text-muted-foreground font-sans text-xs font-semibold">
+                  {t("home.drawer.nearbyRadius", {
+                    distance: formatDistance(nearbyRadiusMeters),
+                  })}
+                </Text>
               ) : null}
             </View>
-          )}
 
-          <View className="mt-4 gap-3">
-            <View className="gap-1 px-1">
-              <Text className="text-foreground font-sans text-base font-bold">
-                {t("home.drawer.lines")}
-              </Text>
-              <Text className="text-muted-foreground font-sans text-sm">
-                {isSearching
-                  ? t("home.drawer.matchingLinesDescription")
-                  : t("home.drawer.linesDescription")}
-              </Text>
-            </View>
-          </View>
-
-          {lines.length > 0 ? (
-            lines.map((line) => (
-              <TransitLineRow
-                key={line.routeId}
-                line={line}
-                onPress={(selectedLine) => {
-                  pageTransition.stopAnimation();
-                  setSelectedLine(selectedLine);
-                  onLinePress(selectedLine);
-                  animatePageTransition(1);
-                }}
-              />
-            ))
-          ) : (
-            <View className="bg-card rounded-2xl px-4 py-5">
-              <Text className="text-foreground font-sans text-base font-bold">
-                {isSearching
-                  ? t("home.drawer.noMatchingLines")
-                  : t("home.drawer.noLines")}
-              </Text>
-              <Text className="text-muted-foreground mt-1 font-sans text-sm">
-                {isSearching
-                  ? t("home.drawer.noMatchingLinesDescription")
-                  : t("home.drawer.noLinesDescription")}
-              </Text>
-            </View>
-          )}
-
-          {hasMoreLines ? (
-            <Pressable
-              accessibilityRole="button"
-              className="py-4 active:opacity-80"
-              disabled={isLoadingMoreLines}
-              onPress={onLoadMoreLines}
-            >
-              {isLoadingMoreLines ? (
-                <ActivityIndicator color="#2563eb" />
-              ) : (
-                <Text className="text-primary text-center font-sans text-base font-bold">
-                  {t("home.drawer.loadMoreLines")}
+            {displayedStops.length > 0 ? (
+              displayedStops.map((stop) => (
+                <StopRow
+                  key={stop.stopId}
+                  onPress={(selectedStop) => {
+                    pageTransition.stopAnimation();
+                    setSelectedStop(selectedStop);
+                    onStopPress(selectedStop);
+                    animatePageTransition(1);
+                  }}
+                  stop={stop}
+                />
+              ))
+            ) : (
+              <View className="bg-card rounded-2xl px-4 py-5">
+                <Text className="text-foreground font-sans text-base font-bold">
+                  {isSearching
+                    ? t("home.drawer.noMatchingStops")
+                    : t("home.drawer.noNearbyStops")}
                 </Text>
-              )}
-            </Pressable>
-          ) : null}
-        </ScrollView>
+                <Text className="text-muted-foreground mt-1 font-sans text-sm">
+                  {isSearching
+                    ? t("home.drawer.noMatchingStopsDescription")
+                    : t("home.drawer.noNearbyStopsDescription")}
+                </Text>
+                {!isSearching ? (
+                  <Pressable
+                    accessibilityRole="button"
+                    className="mt-4 self-start rounded-full px-0 py-1 active:opacity-70"
+                    onPress={onShowLocationTutorial}
+                  >
+                    <Text className="text-primary font-sans text-sm font-bold">
+                      {t("home.drawer.locationTutorialAction")}
+                    </Text>
+                  </Pressable>
+                ) : null}
+              </View>
+            )}
+
+            {hasMoreSearchResults ? (
+              <Pressable
+                accessibilityRole="button"
+                className="py-2 active:opacity-80"
+                onPress={() => {
+                  setVisibleStopCount(
+                    (currentCount) => currentCount + searchStopPageSize,
+                  );
+                }}
+              >
+                <Text className="text-primary text-center font-sans text-base font-bold">
+                  {t("home.drawer.loadMoreStops")}
+                </Text>
+              </Pressable>
+            ) : null}
+
+            <View className="mt-4 gap-3">
+              <View className="gap-1 px-1">
+                <Text className="text-foreground font-sans text-base font-bold">
+                  {t("home.drawer.lines")}
+                </Text>
+                <Text className="text-muted-foreground font-sans text-sm">
+                  {isSearching
+                    ? t("home.drawer.matchingLinesDescription")
+                    : t("home.drawer.linesDescription")}
+                </Text>
+              </View>
+            </View>
+
+            {lines.length > 0 ? (
+              lines.map((line) => (
+                <TransitLineRow
+                  key={line.routeId}
+                  line={line}
+                  onPress={(selectedLine) => {
+                    pageTransition.stopAnimation();
+                    setSelectedLine(selectedLine);
+                    onLinePress(selectedLine);
+                    animatePageTransition(1);
+                  }}
+                />
+              ))
+            ) : (
+              <View className="bg-card rounded-2xl px-4 py-5">
+                <Text className="text-foreground font-sans text-base font-bold">
+                  {isSearching
+                    ? t("home.drawer.noMatchingLines")
+                    : t("home.drawer.noLines")}
+                </Text>
+                <Text className="text-muted-foreground mt-1 font-sans text-sm">
+                  {isSearching
+                    ? t("home.drawer.noMatchingLinesDescription")
+                    : t("home.drawer.noLinesDescription")}
+                </Text>
+              </View>
+            )}
+
+            {hasMoreLines ? (
+              <Pressable
+                accessibilityRole="button"
+                className="py-4 active:opacity-80"
+                disabled={isLoadingMoreLines}
+                onPress={onLoadMoreLines}
+              >
+                {isLoadingMoreLines ? (
+                  <ActivityIndicator color="#2563eb" />
+                ) : (
+                  <Text className="text-primary text-center font-sans text-base font-bold">
+                    {t("home.drawer.loadMoreLines")}
+                  </Text>
+                )}
+              </Pressable>
+            ) : null}
+          </ScrollView>
+        </View>
       </Animated.View>
 
       {selectedLine ? (
@@ -395,6 +435,7 @@ export function DefaultDrawerContent({
             onScroll={noop}
             onStopFollowingVehicle={onStopFollowingVehicle}
             panHandlers={panHandlers}
+            scrollEnabled={scrollEnabled}
             routeVehicles={selectedLineRouteVehiclesPayload?.vehicles ?? []}
             scrollBottomPadding={scrollBottomPadding}
             showArrivalDetails={false}
@@ -432,9 +473,11 @@ export function DefaultDrawerContent({
             onLineDetailOpen={onStopLineDetailOpen}
             onSearchBlur={onSearchBlur}
             onSearchFocus={onSearchFocus}
+            onSearchScrollDismiss={onSearchScrollDismiss}
             onSelectedLineChange={onStopSelectedLineChange}
             onTrackedVehicleChange={onStopTrackedVehicleChange}
             panHandlers={panHandlers}
+            scrollEnabled={scrollEnabled}
             searchInputRef={searchInputRef}
             scrollBottomPadding={scrollBottomPadding}
             stopCode={displayedStopDetail.stopCode}

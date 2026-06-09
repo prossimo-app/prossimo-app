@@ -1,4 +1,4 @@
-import { Text, useColorScheme, View } from "react-native";
+import { Platform, Text, useColorScheme, View } from "react-native";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 
@@ -7,8 +7,8 @@ import { useTranslation } from "@prossimo-app/localization";
 import { AppButton } from "~/components/app-button";
 import {
   defaultBackgroundColor,
-  defaultForegroundColor,
-  secondaryTextColor,
+  getForegroundColor,
+  getSecondaryTextColor,
 } from "~/theme/native-colors";
 import onboardingBackgroundImage from "../../../assets/empty/onboarding-background.png";
 import onboardingFadeDarkImage from "../../../assets/empty/onboarding-fade-dark.png";
@@ -77,13 +77,13 @@ export default function OnboardingScreen() {
           <View className="gap-3">
             <Text
               className="font-serif text-3xl"
-              style={{ color: defaultForegroundColor }}
+              style={{ color: getForegroundColor(colorScheme) }}
             >
               {t("onboarding.title")}
             </Text>
             <Text
               className="font-sans text-lg"
-              style={{ color: secondaryTextColor }}
+              style={{ color: getSecondaryTextColor(colorScheme) }}
             >
               {t("onboarding.subtitle")}
             </Text>
@@ -92,7 +92,11 @@ export default function OnboardingScreen() {
 
         <AppButton
           onPress={() => {
-            router.push("/onboarding/tracking");
+            router.push(
+              Platform.OS === "android"
+                ? "/onboarding/location"
+                : "/onboarding/tracking",
+            );
           }}
         >
           {t("onboarding.primaryAction")}

@@ -108,7 +108,9 @@ export function SelectedStopDrawerContent({
   onTrackedVehicleChange,
   onSearchBlur,
   onSearchFocus,
+  onSearchScrollDismiss,
   panHandlers,
+  scrollEnabled,
   searchInputRef,
   scrollBottomPadding,
   stopCode,
@@ -281,7 +283,9 @@ export function SelectedStopDrawerContent({
           onSearchBlur={onSearchBlur}
           onSearchChangeText={setLineSearchQuery}
           onSearchFocus={onSearchFocus}
+          onSearchScrollDismiss={onSearchScrollDismiss}
           panHandlers={panHandlers}
+          scrollEnabled={scrollEnabled}
           searchInputRef={searchInputRef}
           scrollBottomPadding={scrollBottomPadding}
           stopCode={stopCode}
@@ -304,6 +308,7 @@ export function SelectedStopDrawerContent({
             onClose={handleClose}
             onScroll={onArrivalScroll}
             panHandlers={panHandlers}
+            scrollEnabled={scrollEnabled}
             scrollBottomPadding={scrollBottomPadding}
             showRouteVehicles={false}
             stopName={stopName}
@@ -331,8 +336,10 @@ function ArrivalLineList({
   onSearchBlur,
   onSearchChangeText,
   onSearchFocus,
+  onSearchScrollDismiss,
   onStopAlertsPress,
   panHandlers,
+  scrollEnabled,
   searchInputRef,
   scrollBottomPadding,
   stopName,
@@ -353,8 +360,10 @@ function ArrivalLineList({
   onSearchBlur: () => void;
   onSearchChangeText: (query: string) => void;
   onSearchFocus: () => void;
+  onSearchScrollDismiss: () => void;
   onStopAlertsPress: (() => void) | null;
   panHandlers: GestureResponderHandlers;
+  scrollEnabled: boolean;
   searchInputRef: SelectedStopDrawerContentProps["searchInputRef"];
   scrollBottomPadding: number;
   stopCode: string | null;
@@ -413,7 +422,10 @@ function ArrivalLineList({
         />
       </View>
 
-      <View className="min-h-0 flex-1">
+      <View
+        {...(scrollEnabled ? undefined : panHandlers)}
+        className="min-h-0 flex-1"
+      >
         <KeyboardAwareScrollView
           bottomOffset={24}
           className="min-h-0 flex-1"
@@ -423,6 +435,8 @@ function ArrivalLineList({
           }}
           keyboardShouldPersistTaps="handled"
           onScroll={onArrivalScroll}
+          onScrollBeginDrag={onSearchScrollDismiss}
+          scrollEnabled={scrollEnabled}
           scrollEventThrottle={16}
           showsVerticalScrollIndicator={false}
         >
@@ -476,6 +490,7 @@ export function ArrivalLineDetail({
   onStopFollowingVehicle,
   panHandlers,
   routeVehicles = [],
+  scrollEnabled,
   scrollBottomPadding,
   showArrivalDetails = true,
   showRouteVehicles = true,
@@ -496,6 +511,7 @@ export function ArrivalLineDetail({
   onStopFollowingVehicle?: () => void;
   panHandlers: GestureResponderHandlers;
   routeVehicles?: RouteVehicle[];
+  scrollEnabled: boolean;
   scrollBottomPadding: number;
   showArrivalDetails?: boolean;
   showRouteVehicles?: boolean;
@@ -599,48 +615,57 @@ export function ArrivalLineDetail({
         ) : null}
       </View>
 
-      <ScrollView
+      <View
+        {...(scrollEnabled ? undefined : panHandlers)}
         className="min-h-0 flex-1"
-        contentContainerStyle={{ gap: 12, paddingBottom: scrollBottomPadding }}
-        onScroll={onScroll}
-        scrollEventThrottle={16}
-        showsVerticalScrollIndicator={false}
       >
-        <ServiceAlertList
-          alerts={lineAlerts}
-          isLoading={lineAlertsQuery.isLoading}
-        />
-        {showRouteVehicles ? (
-          <RouteVehicleList
-            followedVehicleId={trackedVehicleId}
-            isPending={isRealtimeDataPending}
-            onStopFollowing={onStopFollowingVehicle}
-            routeLabel={group.label}
-            userLocation={userLocation}
-            vehicles={routeVehicles}
-            onVehiclePress={onRouteVehiclePress}
+        <ScrollView
+          className="min-h-0 flex-1"
+          contentContainerStyle={{
+            gap: 12,
+            paddingBottom: scrollBottomPadding,
+          }}
+          onScroll={onScroll}
+          scrollEnabled={scrollEnabled}
+          scrollEventThrottle={16}
+          showsVerticalScrollIndicator={false}
+        >
+          <ServiceAlertList
+            alerts={lineAlerts}
+            isLoading={lineAlertsQuery.isLoading}
           />
-        ) : null}
-        {showArrivalDetails ? (
-          <>
-            <RealtimeArrivalLegend />
-            {group.arrivals.length > 0 ? (
-              group.arrivals.map((arrival, index) => (
-                <ArrivalDetailRow
-                  arrival={arrival}
-                  key={`${arrival.tripId}:${arrival.directionId}:${arrival.arrivalSeconds}:${index}`}
-                />
-              ))
-            ) : emptyMessage ? (
-              <View className="bg-card rounded-2xl p-4">
-                <Text className="text-muted-foreground text-center font-sans text-sm">
-                  {emptyMessage}
-                </Text>
-              </View>
-            ) : null}
-          </>
-        ) : null}
-      </ScrollView>
+          {showRouteVehicles ? (
+            <RouteVehicleList
+              followedVehicleId={trackedVehicleId}
+              isPending={isRealtimeDataPending}
+              onStopFollowing={onStopFollowingVehicle}
+              routeLabel={group.label}
+              userLocation={userLocation}
+              vehicles={routeVehicles}
+              onVehiclePress={onRouteVehiclePress}
+            />
+          ) : null}
+          {showArrivalDetails ? (
+            <>
+              <RealtimeArrivalLegend />
+              {group.arrivals.length > 0 ? (
+                group.arrivals.map((arrival, index) => (
+                  <ArrivalDetailRow
+                    arrival={arrival}
+                    key={`${arrival.tripId}:${arrival.directionId}:${arrival.arrivalSeconds}:${index}`}
+                  />
+                ))
+              ) : emptyMessage ? (
+                <View className="bg-card rounded-2xl p-4">
+                  <Text className="text-muted-foreground text-center font-sans text-sm">
+                    {emptyMessage}
+                  </Text>
+                </View>
+              ) : null}
+            </>
+          ) : null}
+        </ScrollView>
+      </View>
     </>
   );
 }
