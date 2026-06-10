@@ -460,6 +460,9 @@ importers:
       '@prossimo-app/db':
         specifier: workspace:*
         version: link:../db
+      '@prossimo-app/localization':
+        specifier: workspace:*
+        version: link:../localization
       '@prossimo-app/redis':
         specifier: workspace:*
         version: link:../redis

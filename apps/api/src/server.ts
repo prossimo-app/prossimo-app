@@ -47,7 +47,10 @@ function corsMiddleware(
     res.setHeader("Vary", "Origin");
   }
 
-  res.setHeader("Access-Control-Allow-Headers", "authorization,content-type");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "authorization,content-type,x-language",
+  );
   res.setHeader("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
 
   if (req.method === "OPTIONS") {

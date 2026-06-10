@@ -1,7 +1,7 @@
 {
   "name": "@prossimo-app/mobile",
   "main": "index.ts",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .expo .turbo android ios node_modules",

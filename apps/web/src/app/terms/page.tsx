@@ -35,7 +35,7 @@ export default async function TermsPage() {
     requestCookies.get(languageCookieName)?.value ?? null,
   );
   const t = createTranslator(language);
-  const terms = termsContent[language];
+  const terms = termsContent[language] ?? termsContent.en;
 
   return (
     <>

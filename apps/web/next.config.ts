@@ -1,6 +1,5 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-
 import type { NextConfig } from "next";
 
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
@@ -16,6 +15,9 @@ const nextConfig: NextConfig = {
 
   /** We already do linting and typechecking as separate tasks in CI */
   typescript: { ignoreBuildErrors: true },
+  images: {
+    qualities: [100, 75],
+  },
 };
 
 export default nextConfig;

@@ -35,7 +35,7 @@ export default async function PrivacyPolicyPage() {
     requestCookies.get(languageCookieName)?.value ?? null,
   );
   const t = createTranslator(language);
-  const policy = privacyPolicyContent[language];
+  const policy = privacyPolicyContent[language] ?? privacyPolicyContent.en;
 
   return (
     <>

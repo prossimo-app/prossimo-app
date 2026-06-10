@@ -33,7 +33,9 @@ interface PrivacyPolicyContent {
   title: string;
 }
 
-export const privacyPolicyContent = {
+export const privacyPolicyContent: Partial<
+  Record<SupportedLanguage, PrivacyPolicyContent>
+> & { en: PrivacyPolicyContent } = {
   en: {
     title: "Privacy Policy",
     contentsLabel: "Contents",
@@ -548,4 +550,4 @@ export const privacyPolicyContent = {
       },
     ],
   },
-} satisfies Record<SupportedLanguage, PrivacyPolicyContent>;
+};

@@ -10,11 +10,8 @@ import {
 import { createTRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import superjson from "superjson";
 
-import type {
-  AppRouter,
-  RouterInputs,
-  RouterOutputs,
-} from "@prossimo-app/api";
+import type { AppRouter, RouterInputs, RouterOutputs } from "@prossimo-app/api";
+import { i18n } from "@prossimo-app/localization";
 
 import { getBaseUrl, getWebSocketBaseUrl } from "./base-url";
 
@@ -60,6 +57,10 @@ export const trpcClient = createTRPCClient<AppRouter>({
           const headers = new Map<string, string>();
 
           headers.set("x-trpc-source", "expo-react");
+
+          if (i18n.language) {
+            headers.set("x-language", i18n.language);
+          }
 
           return headers;
         },

@@ -340,5 +340,10 @@
       "resetOnboardingDescription": "Show onboarding again for this user.",
       "resetOnboardingAccessibilityLabel": "Reset onboarding"
     }
+  },
+  "serverErrors": {
+    "rateLimitExceeded": "Too many requests. Please try again in a moment.",
+    "noActiveFeedVersion": "Transit schedule data is temporarily unavailable. Please try again later.",
+    "internalError": "Something went wrong. Please try again later."
   }
 }

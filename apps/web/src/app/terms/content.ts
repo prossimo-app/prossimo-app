@@ -30,7 +30,9 @@ interface TermsContent {
   title: string;
 }
 
-export const termsContent = {
+export const termsContent: Partial<Record<SupportedLanguage, TermsContent>> & {
+  en: TermsContent;
+} = {
   en: {
     title: "Terms of Use",
     contentsLabel: "Contents",
@@ -448,4 +450,4 @@ export const termsContent = {
       },
     ],
   },
-} satisfies Record<SupportedLanguage, TermsContent>;
+};

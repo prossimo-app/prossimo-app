@@ -340,5 +340,10 @@
       "resetOnboardingDescription": "Mostra di nuovo l'onboarding per questo utente.",
       "resetOnboardingAccessibilityLabel": "Reimposta onboarding"
     }
+  },
+  "serverErrors": {
+    "rateLimitExceeded": "Troppe richieste. Riprova tra qualche istante.",
+    "noActiveFeedVersion": "I dati degli orari del trasporto pubblico non sono al momento disponibili. Riprova più tardi.",
+    "internalError": "Si è verificato un errore. Riprova più tardi."
   }
 }

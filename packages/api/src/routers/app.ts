@@ -103,7 +103,7 @@ export const appRouter = router({
     if (!feedVersion?.startDate || !feedVersion.endDate) {
       throw new TRPCError({
         code: "NOT_FOUND",
-        message: "No active GTFS feed version is available",
+        message: ctx.t("serverErrors.noActiveFeedVersion"),
       });
     }
 

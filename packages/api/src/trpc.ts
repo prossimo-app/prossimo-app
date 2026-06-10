@@ -283,7 +283,7 @@ function rateLimitMiddleware(policyName: RateLimitPolicyName) {
     if (!result.success) {
       throw new TRPCError({
         code: "TOO_MANY_REQUESTS",
-        message: "Rate limit exceeded",
+        message: ctx.t("serverErrors.rateLimitExceeded"),
         cause: {
           limit: result.limit,
           remaining: result.remaining,

@@ -3,7 +3,16 @@ import Link from "next/link";
 
 import type { SupportedLanguage } from "@prossimo-app/localization/server";
 
-const downloadBadges = {
+interface DownloadBadgeSet {
+  appStoreAlt: string;
+  appStore: string;
+  googlePlayAlt: string;
+  googlePlay: string;
+}
+
+const downloadBadges: Partial<Record<SupportedLanguage, DownloadBadgeSet>> & {
+  en: DownloadBadgeSet;
+} = {
   en: {
     appStoreAlt: "Download on the App Store",
     appStore: "/landing/en-download-app-store.svg",
@@ -16,16 +25,7 @@ const downloadBadges = {
     googlePlayAlt: "Disponibile su Google Play",
     googlePlay: "/landing/it-download-google-play.svg",
   },
-} satisfies Record<
-  SupportedLanguage,
-  {
-    appStoreAlt: string;
-    appStore: string;
-
-    googlePlayAlt: string;
-    googlePlay: string;
-  }
->;
+};
 
 interface LandingHeroProps {
   ctaLabel: string;
@@ -44,7 +44,7 @@ export function LandingHero({
   language,
   legalDisclaimer,
 }: LandingHeroProps) {
-  const badges = downloadBadges[language];
+  const badges = downloadBadges[language] ?? downloadBadges.en;
 
   return (
     <section className="mx-auto w-11/12 lg:w-2/3">
@@ -61,7 +61,7 @@ export function LandingHero({
             className="flex flex-wrap items-center gap-3 pt-2"
           >
             <Link
-              href="https://apps.apple.com/app/prossimo-torino/id6449075833"
+              href="https://apps.apple.com/it/app/prossimo/id6777119422"
               target="_blank"
               rel="noopener noreferrer"
             >

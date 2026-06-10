@@ -14,8 +14,7 @@
       "types": "./src/server.ts",
       "default": "./src/server.ts"
     },
-    "./locales/en.json": "./src/locales/en.json",
-    "./locales/it.json": "./src/locales/it.json"
+    "./locales/*.json": "./src/locales/*.json"
   },
   "scripts": {
     "format": "prettier --check .",
