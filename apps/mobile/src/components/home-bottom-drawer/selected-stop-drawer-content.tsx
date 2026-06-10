@@ -47,6 +47,7 @@ import type {
   Translate,
 } from "./types";
 import { SearchInput } from "~/components/search-input";
+import { isWithinTorinoServiceArea } from "~/map/torino-bounds";
 import { getWarningForegroundColor } from "~/theme/native-colors";
 import { trpc } from "~/utils/api";
 import {
@@ -698,21 +699,33 @@ function RouteVehicleList({
   vehicles: RouteVehicle[];
 }) {
   const { t } = useTranslation();
+  // The realtime feed occasionally reports garbage positions like (0, 0).
+  // Hide those vehicles, except a followed one so "stop following" stays
+  // reachable; its row is flagged as position unavailable instead.
+  const visibleVehicles = useMemo(
+    () =>
+      vehicles.filter(
+        (vehicle) =>
+          isWithinTorinoServiceArea(vehicle.lat, vehicle.lon) ||
+          vehicle.id === followedVehicleId,
+      ),
+    [followedVehicleId, vehicles],
+  );
   const sortedVehicles = useMemo(
     () =>
       sortRouteVehiclesByFollowedAndDistance(
-        vehicles,
+        visibleVehicles,
         followedVehicleId ?? null,
         userLocation ?? null,
       ),
-    [followedVehicleId, userLocation, vehicles],
+    [followedVehicleId, userLocation, visibleVehicles],
   );
 
   if (isPending) {
     return <RouteVehicleSkeletonList />;
   }
 
-  if (vehicles.length === 0) {
+  if (visibleVehicles.length === 0) {
     return (
       <View className="bg-card rounded-2xl p-4">
         <Text className="text-muted-foreground text-center font-sans text-sm">
@@ -866,6 +879,10 @@ function getRouteVehicleDetail(
   t: Translate,
   userLocation: Coordinates | null,
 ) {
+  if (!isWithinTorinoServiceArea(vehicle.lat, vehicle.lon)) {
+    return t("home.drawer.lineDetail.positionUnavailable");
+  }
+
   const details: string[] = [];
   const distanceMeters = getRouteVehicleDistanceMeters(vehicle, userLocation);
 
@@ -894,7 +911,11 @@ function getRouteVehicleDistanceMeters(
   vehicle: RouteVehicle,
   userLocation: Coordinates | null,
 ) {
-  if (!userLocation || !hasFiniteCoordinate(userLocation)) {
+  if (
+    !userLocation ||
+    !hasFiniteCoordinate(userLocation) ||
+    !isWithinTorinoServiceArea(vehicle.lat, vehicle.lon)
+  ) {
     return null;
   }
 
@@ -1214,15 +1235,7 @@ function RealtimeDataAlert({ type }: { type: "pending" | "stale" }) {
   return (
     <View className="flex-row items-start gap-3 rounded-2xl border border-amber-300 bg-amber-100 p-3 dark:border-amber-700 dark:bg-amber-900">
       <View className="h-4.5 w-4.5 items-center justify-center">
-        {type === "pending" ? (
-          <ActivityIndicator color={iconColor} size="small" />
-        ) : (
-          <SymbolView
-            name={{ ios: "exclamationmark.triangle.fill", android: "warning" }}
-            size={18}
-            tintColor={iconColor}
-          />
-        )}
+        <ActivityIndicator color={iconColor} size="small" />
       </View>
       <Text className="min-w-0 flex-1 font-sans text-sm font-semibold text-amber-950 dark:text-amber-50">
         {label}
@@ -1399,8 +1412,10 @@ function getNearestLiveVehicle(
     (currentArrival) =>
       currentArrival.isRealtime &&
       currentArrival.vehiclePosition &&
-      Number.isFinite(currentArrival.vehiclePosition.lat) &&
-      Number.isFinite(currentArrival.vehiclePosition.lon),
+      isWithinTorinoServiceArea(
+        currentArrival.vehiclePosition.lat,
+        currentArrival.vehiclePosition.lon,
+      ),
   );
 
   if (!arrival?.vehiclePosition || !group) {

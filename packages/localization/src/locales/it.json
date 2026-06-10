@@ -77,6 +77,7 @@
     "map": {
       "zoomWarning": "Ingrandisci la mappa per vedere le fermate vicine.",
       "followingVehicle": "Stai seguendo: {{vehicle}}",
+      "invalidVehiclePositionToast": "Questo veicolo sta segnalando una posizione errata e al momento non può essere seguito.",
       "clusterTitle": "{{count}} fermate",
       "unavailable": "Le mappe sono disponibili solo su Android e iOS."
     },
@@ -123,6 +124,7 @@
         "liveVehicle": "Mezzo live",
         "liveVehicles": "{{count}} mezzi live",
         "noLiveVehicles": "Nessun mezzo live su questa linea al momento.",
+        "positionUnavailable": "Posizione non disponibile al momento",
         "stopSequence": "Sequenza fermata {{sequence}}",
         "stopFollowing": "Interrompi",
         "vehicleUpdatedAt": "Aggiornato alle {{time}}"

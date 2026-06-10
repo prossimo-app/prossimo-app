@@ -9,6 +9,8 @@ import {
 } from "react";
 import * as SecureStore from "expo-secure-store";
 
+import { analytics } from "~/analytics/analytics";
+
 const onboardingStorageKey = "hasSeenOnboarding";
 
 interface OnboardingContextValue {
@@ -50,6 +52,7 @@ export function OnboardingProvider({ children }: PropsWithChildren) {
   }, []);
 
   const completeOnboarding = useCallback(async () => {
+    analytics.track("onboarding_completed");
     await SecureStore.setItemAsync(onboardingStorageKey, "true");
     setHasSeenOnboarding(true);
   }, []);

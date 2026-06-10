@@ -12,6 +12,7 @@ import { BlurTargetView, BlurView } from "expo-blur";
 import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { router, Stack } from "expo-router";
 import { SymbolView } from "expo-symbols";
+import { toast } from "sonner-native";
 import NewspaperIcon from "@expo/material-symbols/newspaper.xml";
 import SettingsIcon from "@expo/material-symbols/settings.xml";
 import { useQuery } from "@tanstack/react-query";
@@ -25,9 +26,11 @@ import type {
   TrackedTransitVehicle,
 } from "~/components/home-bottom-drawer/types";
 import type { SelectedStop } from "~/components/home-map";
+import { analytics } from "~/analytics/analytics";
 import { HomeBottomDrawer } from "~/components/home-bottom-drawer";
 import { parseRouteVehiclesPayload } from "~/components/home-bottom-drawer/arrival-model";
 import { HomeMap } from "~/components/home-map";
+import { isWithinTorinoServiceArea } from "~/map/torino-bounds";
 import { isImminentStrikeNotice } from "~/news/strike-notices";
 import {
   defaultForegroundColor,
@@ -38,6 +41,7 @@ import {
 import { trpc, trpcClient } from "~/utils/api";
 
 export default function Index() {
+  const { t } = useTranslation();
   const blurTargetRef = useRef<RNView | null>(null);
   const [isDrawerExpanded, setIsDrawerExpanded] = useState(false);
   const [isDrawerFullHeight, setIsDrawerFullHeight] = useState(false);
@@ -50,7 +54,19 @@ export default function Index() {
     useState<TrackedTransitVehicle | null>(null);
   const [routeVehiclesPayload, setRouteVehiclesPayload] =
     useState<RouteVehiclesPayload | null>(null);
-  const handleStopSelectionChange = (stop: SelectedStop | null) => {
+  const handleStopSelectionChange = (
+    stop: SelectedStop | null,
+    source: "map" | "search" = "map",
+  ) => {
+    if (stop) {
+      analytics.track("stop_selected", {
+        source,
+        stop_code: stop.stopCode,
+        stop_id: stop.stopId,
+        stop_name: stop.stopName,
+      });
+    }
+
     setSelectedStop(stop);
     setSelectedLine(null);
     setTrackedVehicle(null);
@@ -59,6 +75,14 @@ export default function Index() {
     setIsDrawerFullHeight(false);
   };
   const handleSelectedLineChange = (line: SelectedTransitLine | null) => {
+    if (line) {
+      analytics.track("line_selected", {
+        route_id: line.routeId,
+        route_label: line.routeLabel,
+        route_type: line.routeType,
+      });
+    }
+
     setSelectedLine(line);
     if (!line) {
       setTrackedVehicle(null);
@@ -69,6 +93,16 @@ export default function Index() {
     if (!selectedLine) {
       return;
     }
+
+    if (!isWithinTorinoServiceArea(vehicle.lat, vehicle.lon)) {
+      toast.error(t("home.map.invalidVehiclePositionToast"));
+      return;
+    }
+
+    analytics.track("vehicle_tracked", {
+      route_label: selectedLine.routeLabel,
+      route_type: selectedLine.routeType,
+    });
 
     setTrackedVehicle({
       bearing: vehicle.bearing,
@@ -85,6 +119,7 @@ export default function Index() {
     });
   };
   const handleStopFollowingVehicle = () => {
+    analytics.track("vehicle_tracking_stopped");
     setTrackedVehicle(null);
   };
 
@@ -121,6 +156,12 @@ export default function Index() {
 
               if (!latestVehicle) {
                 return null;
+              }
+
+              if (
+                !isWithinTorinoServiceArea(latestVehicle.lat, latestVehicle.lon)
+              ) {
+                return currentTrackedVehicle;
               }
 
               return {
@@ -171,7 +212,9 @@ export default function Index() {
           onFullHeightChange={setIsDrawerFullHeight}
           onRouteVehiclePress={handleRouteVehiclePress}
           onStopFollowingVehicle={handleStopFollowingVehicle}
-          onStopSelect={handleStopSelectionChange}
+          onStopSelect={(stop) => {
+            handleStopSelectionChange(stop, "search");
+          }}
           onSelectedLineChange={handleSelectedLineChange}
           onTrackedVehicleChange={setTrackedVehicle}
           routeVehiclesPayload={routeVehiclesPayload}

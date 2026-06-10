@@ -20,6 +20,8 @@ import {
 import type { SupportedLanguage } from "@prossimo-app/localization";
 import { i18n, normalizeLanguage } from "@prossimo-app/localization";
 
+import { analytics } from "~/analytics/analytics";
+
 const shareAppUsageStorageKey = "settings.shareAppUsage";
 const languageStorageKey = "settings.language";
 const themeStorageKey = "settings.theme";
@@ -181,12 +183,14 @@ export function SettingsProvider({ children }: PropsWithChildren) {
   }, []);
 
   const setLanguage = useCallback(async (value: SupportedLanguage) => {
+    analytics.track("language_changed", { language: value });
     await SecureStore.setItemAsync(languageStorageKey, value);
     await i18n.changeLanguage(value);
     setLanguageState(value);
   }, []);
 
   const setTheme = useCallback(async (value: ThemeOption) => {
+    analytics.track("theme_changed", { theme: value });
     await SecureStore.setItemAsync(themeStorageKey, value);
     applyTheme(value);
     setThemeState(value);

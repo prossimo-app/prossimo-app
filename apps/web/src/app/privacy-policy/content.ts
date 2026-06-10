@@ -38,7 +38,7 @@ export const privacyPolicyContent = {
     title: "Privacy Policy",
     contentsLabel: "Contents",
     effectiveDateLabel: "Effective date",
-    effectiveDate: "5 June 2026",
+    effectiveDate: "10 June 2026",
     intro: {
       beforeAppName: "This Privacy Policy explains how",
       appName: "Prossimo",
@@ -85,17 +85,18 @@ export const privacyPolicyContent = {
           {
             title: "Device and Usage Data",
             paragraphs: [
-              "We may collect limited technical and usage information through Expo Insights, such as:",
+              "We may collect limited technical information through Expo Insights, such as device type, operating system, app version, and basic performance information, to monitor the reliability of the App.",
+              'In addition, if you enable "Activity tracking" in the App settings, we collect usage analytics through PostHog, an analytics service hosted in the European Union. This includes:',
             ],
             bullets: [
-              "device type;",
-              "operating system;",
-              "app version;",
-              "basic usage and performance information;",
-              "aggregated information about how the App is used.",
+              "an anonymous install identifier: a random identifier generated on your device the first time you launch the App, stored only on your device, and shared with PostHog only in irreversibly hashed (SHA-256) form; it is not derived from your device hardware or any personal information, does not identify you personally, and is deleted and replaced with a new one if you uninstall and reinstall the App;",
+              "interactions with App features, such as which screens you view and which stops, lines, and vehicles you select;",
+              "changes to App settings, such as theme, language, and notification preferences;",
+              "device type, operating system, and app version.",
             ],
             after: [
-              "This information helps us understand app performance and improve the reliability and usability of Prossimo.",
+              "Usage analytics are collected only with your consent and are used solely to understand how the App is used and to improve it. Your precise device location is never sent to our analytics provider.",
+              'You can withdraw your consent at any time by turning off "Activity tracking" in the App settings, after which no further analytics data is collected.',
             ],
           },
           {
@@ -141,6 +142,7 @@ export const privacyPolicyContent = {
           "to show nearby stops and map-based transport information;",
           "to send push notifications if enabled;",
           "to monitor App performance;",
+          "to understand how App features are used, where you have consented to activity tracking;",
           "to improve reliability and user experience;",
           "to protect the App from misuse or technical issues;",
           "to comply with legal obligations, where required.",
@@ -164,12 +166,12 @@ export const privacyPolicyContent = {
           "Where GDPR applies, we process personal data based on the following legal bases:",
         ],
         bullets: [
-          "Consent: for accessing your device location and sending push notifications.",
-          "Legitimate interest: for improving App performance, understanding general usage, preventing abuse, and maintaining the security and reliability of the App.",
+          "Consent: for accessing your device location, sending push notifications, and collecting usage analytics about how you use the App.",
+          "Legitimate interest: for monitoring App performance, preventing abuse, and maintaining the security and reliability of the App.",
           "Legal obligation: where processing is necessary to comply with applicable law.",
         ],
         after: [
-          "You may withdraw consent for location access or notifications at any time through your device settings.",
+          'You may withdraw consent for location access or notifications at any time through your device settings, and for usage analytics at any time by turning off "Activity tracking" in the App settings.',
         ],
       },
       {
@@ -179,7 +181,8 @@ export const privacyPolicyContent = {
           "Prossimo may use third-party services to operate and improve the App, including:",
         ],
         bullets: [
-          "Expo Insights for basic app usage and performance information;",
+          "Expo Insights for basic app performance and reliability information;",
+          "PostHog, a product analytics service hosted in the European Union, used to understand how the App is used — only if you have enabled activity tracking, and only using the hashed anonymous install identifier described above;",
           "Google Maps, used on Android to display maps, user location, and stop markers;",
           "Apple Maps, used on supported Apple devices to display maps and location-based features;",
           "infrastructure and hosting providers necessary to operate the App.",
@@ -212,6 +215,7 @@ export const privacyPolicyContent = {
           "Precise location data is not stored on our servers.",
           "Push notification tokens may be retained for as long as notifications are enabled or as long as necessary to provide notification functionality.",
           "Technical and usage information may be retained for a limited period to monitor performance, debug issues, and improve the App.",
+          "Usage analytics associated with the hashed anonymous install identifier are retained by our analytics provider only for as long as necessary to analyze and improve the App. If you withdraw your consent, no further analytics data is collected.",
         ],
       },
       {
@@ -265,6 +269,7 @@ export const privacyPolicyContent = {
         title: "14. International Transfers",
         paragraphs: [
           "Some service providers used by the App may process data outside your country of residence.",
+          "Usage analytics collected through PostHog are processed on servers located in the European Union.",
           "Where required, we rely on appropriate safeguards for international data transfers.",
         ],
       },
@@ -289,7 +294,7 @@ export const privacyPolicyContent = {
     title: "Informativa sulla privacy",
     contentsLabel: "Indice",
     effectiveDateLabel: "Data di entrata in vigore",
-    effectiveDate: "5 giugno 2026",
+    effectiveDate: "10 giugno 2026",
     intro: {
       beforeAppName: "La presente Informativa sulla privacy spiega come",
       appName: "Prossimo",
@@ -336,17 +341,18 @@ export const privacyPolicyContent = {
           {
             title: "Dati del dispositivo e di utilizzo",
             paragraphs: [
-              "Potremmo raccogliere informazioni tecniche e di utilizzo limitate tramite Expo Insights, come:",
+              "Potremmo raccogliere informazioni tecniche limitate tramite Expo Insights, come tipo di dispositivo, sistema operativo, versione dell'app e informazioni di base sulle prestazioni, per monitorare l'affidabilità dell'App.",
+              'Inoltre, se attivi il "Tracciamento dell\'attività" nelle impostazioni dell\'App, raccogliamo dati analitici di utilizzo tramite PostHog, un servizio di analisi ospitato nell\'Unione Europea. Questo include:',
             ],
             bullets: [
-              "tipo di dispositivo;",
-              "sistema operativo;",
-              "versione dell'app;",
-              "informazioni di base su utilizzo e prestazioni;",
-              "informazioni aggregate su come viene utilizzata l'App.",
+              "un identificatore anonimo di installazione: un identificatore casuale generato sul tuo dispositivo al primo avvio dell'App, memorizzato solo sul tuo dispositivo e condiviso con PostHog esclusivamente in forma irreversibilmente cifrata tramite hash (SHA-256); non deriva dall'hardware del tuo dispositivo né da informazioni personali, non ti identifica personalmente e viene eliminato e sostituito con uno nuovo se disinstalli e reinstalli l'App;",
+              "interazioni con le funzionalità dell'App, come le schermate che visualizzi e le fermate, le linee e i veicoli che selezioni;",
+              "modifiche alle impostazioni dell'App, come tema, lingua e preferenze di notifica;",
+              "tipo di dispositivo, sistema operativo e versione dell'app.",
             ],
             after: [
-              "Queste informazioni ci aiutano a comprendere le prestazioni dell'app e a migliorare l'affidabilità e l'usabilità di Prossimo.",
+              "I dati analitici di utilizzo sono raccolti solo con il tuo consenso e sono utilizzati esclusivamente per comprendere come viene utilizzata l'App e per migliorarla. La posizione precisa del tuo dispositivo non viene mai inviata al nostro fornitore di analisi.",
+              'Puoi revocare il consenso in qualsiasi momento disattivando il "Tracciamento dell\'attività" nelle impostazioni dell\'App; da quel momento non verranno più raccolti dati analitici.',
             ],
           },
           {
@@ -394,6 +400,7 @@ export const privacyPolicyContent = {
           "mostrare fermate nelle vicinanze e informazioni sul trasporto basate sulla mappa;",
           "inviare notifiche push, se abilitate;",
           "monitorare le prestazioni dell'App;",
+          "comprendere come vengono utilizzate le funzionalità dell'App, ove tu abbia acconsentito al tracciamento dell'attività;",
           "migliorare affidabilità ed esperienza utente;",
           "proteggere l'App da usi impropri o problemi tecnici;",
           "rispettare obblighi di legge, ove richiesto.",
@@ -417,12 +424,12 @@ export const privacyPolicyContent = {
           "Ove si applichi il GDPR, trattiamo i dati personali sulla base delle seguenti basi giuridiche:",
         ],
         bullets: [
-          "Consenso: per accedere alla posizione del dispositivo e inviare notifiche push.",
-          "Legittimo interesse: per migliorare le prestazioni dell'App, comprendere l'utilizzo generale, prevenire abusi e mantenere sicurezza e affidabilità dell'App.",
+          "Consenso: per accedere alla posizione del dispositivo, inviare notifiche push e raccogliere dati analitici su come utilizzi l'App.",
+          "Legittimo interesse: per monitorare le prestazioni dell'App, prevenire abusi e mantenere sicurezza e affidabilità dell'App.",
           "Obbligo legale: quando il trattamento è necessario per rispettare la legge applicabile.",
         ],
         after: [
-          "Puoi revocare il consenso per l'accesso alla posizione o per le notifiche in qualsiasi momento dalle impostazioni del dispositivo.",
+          'Puoi revocare il consenso per l\'accesso alla posizione o per le notifiche in qualsiasi momento dalle impostazioni del dispositivo, e per i dati analitici di utilizzo in qualsiasi momento disattivando il "Tracciamento dell\'attività" nelle impostazioni dell\'App.',
         ],
       },
       {
@@ -432,7 +439,8 @@ export const privacyPolicyContent = {
           "Prossimo può utilizzare servizi di terze parti per gestire e migliorare l'App, inclusi:",
         ],
         bullets: [
-          "Expo Insights per informazioni di base su utilizzo e prestazioni dell'app;",
+          "Expo Insights per informazioni di base su prestazioni e affidabilità dell'app;",
+          "PostHog, un servizio di analisi di prodotto ospitato nell'Unione Europea, usato per comprendere come viene utilizzata l'App — solo se hai attivato il tracciamento dell'attività e solo tramite l'identificatore anonimo di installazione cifrato tramite hash descritto sopra;",
           "Google Maps, usato su Android per mostrare mappe, posizione dell'utente e indicatori delle fermate;",
           "Apple Maps, usato sui dispositivi Apple supportati per mostrare mappe e funzionalita basate sulla posizione;",
           "fornitori di infrastruttura e hosting necessari per il funzionamento dell'App.",
@@ -465,6 +473,7 @@ export const privacyPolicyContent = {
           "I dati sulla posizione precisa non vengono memorizzati sui nostri server.",
           "I token per le notifiche push possono essere conservati finché le notifiche sono abilitate o per il tempo necessario a fornire la funzionalità di notifica.",
           "Le informazioni tecniche e di utilizzo possono essere conservate per un periodo limitato per monitorare le prestazioni, risolvere problemi e migliorare l'App.",
+          "I dati analitici di utilizzo associati all'identificatore anonimo di installazione cifrato tramite hash sono conservati dal nostro fornitore di analisi solo per il tempo necessario ad analizzare e migliorare l'App. Se revochi il consenso, non verranno più raccolti dati analitici.",
         ],
       },
       {
@@ -518,6 +527,7 @@ export const privacyPolicyContent = {
         title: "14. Trasferimenti internazionali",
         paragraphs: [
           "Alcuni fornitori di servizi utilizzati dall'App possono trattare dati al di fuori del tuo paese di residenza.",
+          "I dati analitici di utilizzo raccolti tramite PostHog sono trattati su server situati nell'Unione Europea.",
           "Ove richiesto, ci basiamo su garanzie adeguate per i trasferimenti internazionali di dati.",
         ],
       },

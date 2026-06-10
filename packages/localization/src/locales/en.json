@@ -77,6 +77,7 @@
     "map": {
       "zoomWarning": "Zoom in to see nearby stops.",
       "followingVehicle": "Currently following: {{vehicle}}",
+      "invalidVehiclePositionToast": "This vehicle is reporting a wrong location and can't be followed right now.",
       "clusterTitle": "{{count}} stops",
       "unavailable": "Maps are only available on Android and iOS."
     },
@@ -123,6 +124,7 @@
         "liveVehicle": "Live vehicle",
         "liveVehicles": "{{count}} live vehicles",
         "noLiveVehicles": "No live vehicles on this line right now.",
+        "positionUnavailable": "Position unavailable right now",
         "stopSequence": "Stop sequence {{sequence}}",
         "stopFollowing": "Stop following",
         "vehicleUpdatedAt": "Updated at {{time}}"

@@ -31,7 +31,7 @@ import type {
 } from "~/components/home-bottom-drawer/types";
 import type { RouterOutputs } from "~/utils/api";
 import { useAppBootstrap } from "~/app-bootstrap/app-bootstrap-provider";
-import { torinoCenter } from "~/map/torino-bounds";
+import { isWithinTorinoServiceArea, torinoCenter } from "~/map/torino-bounds";
 import { useSettings } from "~/settings/settings-provider";
 import { trpc } from "~/utils/api";
 
@@ -516,7 +516,8 @@ export function HomeMap({
       .filter(
         (vehicle) =>
           vehicle.id !== trackedVehicle?.id &&
-          (!trackedVehicle?.tripId || vehicle.tripId !== trackedVehicle.tripId),
+          (!trackedVehicle?.tripId || vehicle.tripId !== trackedVehicle.tripId) &&
+          isWithinTorinoServiceArea(vehicle.lat, vehicle.lon),
       )
       .map((vehicle) => ({
         bearing: vehicle.bearing,

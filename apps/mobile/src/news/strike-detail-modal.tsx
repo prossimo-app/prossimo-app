@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Linking,
   Modal,
@@ -11,6 +12,7 @@ import { SymbolView } from "expo-symbols";
 import { useTranslation } from "@prossimo-app/localization";
 
 import type { StrikeNotice } from "~/news/strike-notices";
+import { analytics } from "~/analytics/analytics";
 import { formatDate } from "~/news/format-date";
 import { getStrikeStartDate } from "~/news/strike-notices";
 import { useNativeColors } from "~/theme/native-colors";
@@ -30,6 +32,12 @@ export function StrikeDetailModal({
     strike?.description && strike.title
       ? `${strike.title}\n\n${strike.description}`
       : (strike?.description ?? strike?.title ?? "");
+
+  useEffect(() => {
+    if (strike) {
+      analytics.track("strike_detail_viewed");
+    }
+  }, [strike]);
 
   return (
     <Modal

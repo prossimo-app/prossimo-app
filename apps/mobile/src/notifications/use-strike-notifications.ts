@@ -5,6 +5,7 @@ import { toast } from "sonner-native";
 
 import { useTranslation } from "@prossimo-app/localization";
 
+import { analytics } from "~/analytics/analytics";
 import {
   disableStrikeNotificationsAsync,
   enableStrikeNotificationsAsync,
@@ -44,6 +45,7 @@ export function useStrikeNotifications() {
     try {
       await enableStrikeNotificationsAsync();
       setIsEnabled(true);
+      analytics.track("strike_notifications_toggled", { enabled: true });
       toast.success(t("news.notifications.enabledToast"));
     } catch {
       toast.error(t("news.notifications.errorToast"));
@@ -61,6 +63,7 @@ export function useStrikeNotifications() {
       if (isEnabled) {
         await disableStrikeNotificationsAsync();
         setIsEnabled(false);
+        analytics.track("strike_notifications_toggled", { enabled: false });
         toast.success(t("news.notifications.disabledToast"));
         return;
       }

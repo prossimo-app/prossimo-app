@@ -113,6 +113,7 @@ interface StaticStopTimeRow {
   routeType: number | null;
   scheduledArrivalSeconds: number | null;
   scheduledDepartureSeconds: number | null;
+  stopCode: string | null;
   stopId: string;
   stopSequence: number;
   tripHeadsign: string | null;
@@ -126,6 +127,7 @@ interface ObservedStopArrivalCacheResult {
     | "no-redis"
     | "no-trip-updates"
     | null;
+  rejectedArrivals: number;
   staticStopTimeMatches: number;
   stopTopics: number;
   topics: string[];
@@ -290,29 +292,33 @@ async function cacheActiveStopArrivals({
         .map((tripUpdate) => tripUpdate.trip?.tripId)
         .filter((tripId): tripId is string => Boolean(tripId)),
     });
+  let rejectedArrivals = 0;
   let updatedTopics = 0;
   let writtenArrivals = 0;
 
   for (const topic of stopTopics) {
-    const stopPayload = deriveStopArrivals({
-      fetchedAt,
-      staticStopTimesByTripAndSequence,
-      stopId: topic.id,
-      tripUpdates: latestTripUpdates,
-      vehiclePositionsByTripId: latestVehiclePositionsByTripId,
-    });
+    const { payload: stopPayload, rejectedArrivals: rejected } =
+      deriveStopArrivals({
+        fetchedAt,
+        staticStopTimesByTripAndSequence,
+        stopId: topic.id,
+        tripUpdates: latestTripUpdates,
+        vehiclePositionsByTripId: latestVehiclePositionsByTripId,
+      });
 
     await cacheAndPublishTopicPayload({
       payload: stopPayload,
       redis,
       topic,
     });
+    rejectedArrivals += rejected;
     updatedTopics += 1;
     writtenArrivals += stopPayload.arrivals.length;
   }
 
   return createObservedStopArrivalCacheResult({
     activeTopics: topics.length,
+    rejectedArrivals,
     staticStopTimeMatches: staticStopTimesByTripAndSequence.size,
     stopTopics: stopTopics.length,
     topics: stopTopics.map((topic) => `${topic.type}:${topic.id}`),
@@ -390,6 +396,7 @@ function createObservedStopArrivalCacheResult(
 ): ObservedStopArrivalCacheResult {
   return {
     activeTopics: values.activeTopics ?? 0,
+    rejectedArrivals: values.rejectedArrivals ?? 0,
     skippedReason: values.skippedReason ?? null,
     staticStopTimeMatches: values.staticStopTimeMatches ?? 0,
     stopTopics: values.stopTopics ?? 0,
@@ -480,13 +487,36 @@ async function getStaticStopTimesByTripAndSequence({
         AND gtfs_feed_versions.activated_at IS NOT NULL
       ORDER BY id
       LIMIT 1
+    ),
+    resolved_stops AS (
+      SELECT DISTINCT ON (requested_stops.observed_stop_id)
+        requested_stops.observed_stop_id,
+        stops.stop_id,
+        stops.stop_code
+      FROM requested_stops
+      INNER JOIN stops
+        ON stops.feed_version_id = (SELECT id FROM active_feed)
+        AND (
+          stops.stop_code = requested_stops.observed_stop_code
+          OR stops.stop_id = requested_stops.observed_stop_id
+          OR stops.stop_code = requested_stops.observed_stop_id
+        )
+      ORDER BY
+        requested_stops.observed_stop_id,
+        CASE
+          WHEN stops.stop_code = requested_stops.observed_stop_code THEN 0
+          WHEN stops.stop_code = requested_stops.observed_stop_id THEN 1
+          ELSE 2
+        END,
+        stops.stop_id
     )
     SELECT
-      requested_stops.observed_stop_id AS "observedStopId",
+      resolved_stops.observed_stop_id AS "observedStopId",
       requested_trips.observed_trip_id AS "observedTripId",
       stop_times.trip_id AS "tripId",
       stop_times.stop_sequence AS "stopSequence",
       stop_times.stop_id AS "stopId",
+      resolved_stops.stop_code AS "stopCode",
       stop_times.arrival_seconds AS "scheduledArrivalSeconds",
       stop_times.departure_seconds AS "scheduledDepartureSeconds",
       trips.route_id AS "routeId",
@@ -501,13 +531,8 @@ async function getStaticStopTimesByTripAndSequence({
     INNER JOIN requested_trips
       ON stop_times.trip_id = requested_trips.observed_trip_id
       OR stop_times.trip_id = requested_trips.normalized_trip_id
-    INNER JOIN stops
-      ON stops.feed_version_id = stop_times.feed_version_id
-      AND stops.stop_id = stop_times.stop_id
-    INNER JOIN requested_stops
-      ON requested_stops.observed_stop_id = stops.stop_id
-      OR requested_stops.observed_stop_id = stops.stop_code
-      OR requested_stops.observed_stop_code = stops.stop_code
+    INNER JOIN resolved_stops
+      ON resolved_stops.stop_id = stop_times.stop_id
     INNER JOIN trips
       ON trips.feed_version_id = stop_times.feed_version_id
       AND trips.trip_id = stop_times.trip_id
@@ -564,8 +589,9 @@ function deriveStopArrivals({
   stopId: string;
   tripUpdates: GtfsRealtimeTripUpdate[];
   vehiclePositionsByTripId: ReadonlyMap<string, GtfsRealtimeVehiclePosition>;
-}): StopArrivalsPayload {
+}): { payload: StopArrivalsPayload; rejectedArrivals: number } {
   const arrivals: StopArrivalsPayload["arrivals"] = [];
+  let rejectedArrivals = 0;
 
   for (const tripUpdate of tripUpdates) {
     const tripId = tripUpdate.trip?.tripId;
@@ -583,6 +609,13 @@ function deriveStopArrivals({
             );
 
       if (staticStopTime?.observedStopId !== stopId) {
+        continue;
+      }
+
+      if (
+        !realtimeStopMatchesStaticStop(stopTimeUpdate.stopId, staticStopTime)
+      ) {
+        rejectedArrivals += 1;
         continue;
       }
 
@@ -625,10 +658,28 @@ function deriveStopArrivals({
   );
 
   return {
-    arrivals,
-    fetchedAt,
-    stopId,
+    payload: {
+      arrivals,
+      fetchedAt,
+      stopId,
+    },
+    rejectedArrivals,
   };
+}
+
+function realtimeStopMatchesStaticStop(
+  realtimeStopId: string | null,
+  staticStopTime: StaticStopTimeRow,
+) {
+  if (!realtimeStopId) {
+    return true;
+  }
+
+  return (
+    realtimeStopId === staticStopTime.stopId ||
+    realtimeStopId === staticStopTime.stopCode ||
+    realtimeStopId === staticStopTime.observedStopId
+  );
 }
 
 function deriveRouteVehicles({

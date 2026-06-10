@@ -30,6 +30,7 @@ import { Toaster } from "sonner-native";
 
 import { useTranslation } from "@prossimo-app/localization";
 
+import { AnalyticsGate } from "~/analytics/analytics-gate";
 import {
   AppBootstrapProvider,
   useAppBootstrap,
@@ -85,6 +86,7 @@ function RootLayout() {
             <OnboardingProvider>
               <AppBootstrapProvider>
                 <SettingsProvider>
+                  <AnalyticsGate />
                   <AppStatusBar />
                   <RootStack />
                 </SettingsProvider>
