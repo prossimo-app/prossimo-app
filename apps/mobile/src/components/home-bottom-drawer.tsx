@@ -44,6 +44,7 @@ import type {
 import type { SelectedStop } from "~/components/home-map";
 import type { RouterOutputs } from "~/utils/api";
 import { useAppBootstrap } from "~/app-bootstrap/app-bootstrap-provider";
+import { useFavorites } from "~/favorites/favorites-provider";
 import { getStrikeTiming, isVisibleStrikeNotice } from "~/news/strike-notices";
 import { trpc, trpcClient } from "~/utils/api";
 import { getFuzzyMatchScore } from "~/utils/fuzzy-search";
@@ -220,6 +221,7 @@ export function HomeBottomDrawer({
   const shouldRestoreSearchFocusStopRef = useRef(true);
   const lineDetailStartStopRef = useRef<DrawerStop | null>(null);
   const defaultStopDetailStartStopRef = useRef<DrawerStop | null>(null);
+  const favoritesStartStopRef = useRef<DrawerStop | null>(null);
   const defaultStopDetailHadSelectedStopRef = useRef(false);
   const searchInputRef = useRef<TextInput | null>(null);
   const selectedStopId = selectedStop?.stopId ?? null;
@@ -276,6 +278,33 @@ export function HomeBottomDrawer({
         radiusMeters: nearbyStopRadiusMeters,
       }),
     [cachedStops, location],
+  );
+  const { favoriteStops } = useFavorites();
+  const favoriteDrawerStops = useMemo(
+    () =>
+      favoriteStops.flatMap((favorite) => {
+        const stop = cachedStops.find(
+          (cachedStop) => cachedStop.stopId === favorite.stopId,
+        );
+
+        if (!stop) {
+          return [];
+        }
+
+        const distanceMeters =
+          hasValidCoordinates(location) &&
+          hasValidCoordinates({ latitude: stop.lat, longitude: stop.lon })
+            ? Math.round(
+                getDistanceMeters(location, {
+                  latitude: stop.lat,
+                  longitude: stop.lon,
+                }),
+              )
+            : Number.POSITIVE_INFINITY;
+
+        return [{ ...stop, distanceMeters }];
+      }),
+    [cachedStops, favoriteStops, location],
   );
   const searchedStops = useMemo(
     () =>
@@ -722,6 +751,21 @@ export function HomeBottomDrawer({
 
     setDrawerStop("collapsed");
   }, [activeDrawerStop, setDrawerStop]);
+  const openFavorites = useCallback(() => {
+    favoritesStartStopRef.current ??= activeDrawerStop;
+
+    if (activeDrawerStop === "collapsed") {
+      setDrawerStop("expanded");
+    }
+  }, [activeDrawerStop, setDrawerStop]);
+  const closeFavorites = useCallback(() => {
+    const previousStop = favoritesStartStopRef.current;
+    favoritesStartStopRef.current = null;
+
+    if (previousStop) {
+      setDrawerStop(previousStop);
+    }
+  }, [setDrawerStop]);
   const closeDefaultStopDetail = useCallback(() => {
     const previousStop = defaultStopDetailStartStopRef.current;
     defaultStopDetailStartStopRef.current = null;
@@ -887,7 +931,10 @@ export function HomeBottomDrawer({
           ) : (
             <DefaultDrawerContent
               currentTimeMs={currentTimeMs}
+              favoriteStops={favoriteDrawerStops}
               hasTodayStrike={hasTodayStrike}
+              onFavoritesClose={closeFavorites}
+              onFavoritesOpen={openFavorites}
               nearbyRadiusMeters={nearbyStopRadiusMeters}
               nearbyStops={nearbyStops}
               location={location}

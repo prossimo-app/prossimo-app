@@ -11,7 +11,7 @@ import {
 
 import { getPrimaryIconColor } from "~/theme/native-colors";
 
-type DrawerIconButtonIcon = "back" | "close" | "news";
+type DrawerIconButtonIcon = "back" | "close" | "heart" | "heartFilled" | "news";
 
 interface DrawerIconButtonProps {
   accessibilityLabel: string;
@@ -23,6 +23,8 @@ interface DrawerIconButtonProps {
 const nativeIcons = {
   back: "chevron.backward",
   close: "xmark",
+  heart: "heart",
+  heartFilled: "heart.fill",
   news: "newspaper.fill",
 } satisfies Record<
   DrawerIconButtonIcon,
@@ -32,6 +34,8 @@ const nativeIcons = {
 const fallbackIcons = {
   back: { ios: "chevron.backward", android: "chevron_left" },
   close: { ios: "xmark", android: "close" },
+  heart: { ios: "heart", android: "favorite" },
+  heartFilled: { ios: "heart.fill", android: "favorite" },
   news: { ios: "newspaper.fill", android: "newspaper" },
 } as const;
 
@@ -83,7 +87,7 @@ export function DrawerIconButton({
       <SymbolView
         name={fallbackIcons[icon]}
         size={icon === "back" ? 22 : 20}
-        tintColor={iconColor}
+        tintColor={icon === "heartFilled" ? "#ef4444" : iconColor}
       />
       {hasBadge ? (
         <SymbolView

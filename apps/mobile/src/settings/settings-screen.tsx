@@ -10,6 +10,7 @@ import OpenInNewIcon from "@expo/material-symbols/open_in_new.xml";
 import PrivacyTipIcon from "@expo/material-symbols/privacy_tip.xml";
 import RestartAltIcon from "@expo/material-symbols/restart_alt.xml";
 import StorageIcon from "@expo/material-symbols/storage.xml";
+import WidgetsIcon from "@expo/material-symbols/widgets.xml";
 import {
   Button,
   Column,
@@ -76,6 +77,10 @@ const externalLinkIcon = Icon.select({
 const resetOnboardingIcon = Icon.select({
   ios: "arrow.counterclockwise",
   android: RestartAltIcon,
+});
+const widgetIcon = Icon.select({
+  ios: "square.grid.2x2.fill",
+  android: WidgetsIcon,
 });
 
 interface SettingIconProps {
@@ -188,6 +193,24 @@ export default function SettingsScreen() {
                     />
                   ))}
                 </Picker>
+              </ListItem.Trailing>
+            </ListItem>
+
+            <ListItem
+              onPress={() => {
+                router.push("/settings/widget");
+              }}
+              supportingText={t("settings.widget.label")}
+            >
+              <ListItem.Leading>
+                <SettingIcon
+                  accessibilityLabel={t("settings.widget.accessibilityLabel")}
+                  color="#0a84ff"
+                  name={widgetIcon}
+                />
+              </ListItem.Leading>
+              <ListItem.Trailing>
+                <Icon name={chevronIcon} size={18} />
               </ListItem.Trailing>
             </ListItem>
           </FieldGroup.Section>

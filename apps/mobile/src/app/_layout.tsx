@@ -2,7 +2,7 @@ import "../../global.css";
 
 import type { StatusBarStyle } from "expo-status-bar";
 import { useEffect } from "react";
-import { StyleSheet, useColorScheme, View } from "react-native";
+import { AppState, StyleSheet, useColorScheme, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -35,6 +35,7 @@ import {
   AppBootstrapProvider,
   useAppBootstrap,
 } from "~/app-bootstrap/app-bootstrap-provider";
+import { FavoritesProvider } from "~/favorites/favorites-provider";
 import { syncStrikeNotificationsAsync } from "~/notifications/strike-notifications";
 import {
   OnboardingProvider,
@@ -47,6 +48,10 @@ import {
   settingsScreenBackgroundColor,
 } from "~/theme/native-colors";
 import { queryClient } from "~/utils/api";
+import {
+  refreshStopArrivalsWidgetAsync,
+  syncStopArrivalsWidgetAsync,
+} from "~/widgets/stop-arrivals-widget-data";
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -72,6 +77,19 @@ function RootLayout() {
 
   useEffect(() => {
     void syncStrikeNotificationsAsync();
+    void syncStopArrivalsWidgetAsync();
+
+    const subscription = AppState.addEventListener("change", (state) => {
+      if (state === "active") {
+        refreshStopArrivalsWidgetAsync().catch(() => {
+          // Widget refresh is best-effort; the next foreground retries.
+        });
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   if (!fontsLoaded && !fontError) {
@@ -86,9 +104,11 @@ function RootLayout() {
             <OnboardingProvider>
               <AppBootstrapProvider>
                 <SettingsProvider>
-                  <AnalyticsGate />
-                  <AppStatusBar />
-                  <RootStack />
+                  <FavoritesProvider>
+                    <AnalyticsGate />
+                    <AppStatusBar />
+                    <RootStack />
+                  </FavoritesProvider>
                 </SettingsProvider>
               </AppBootstrapProvider>
             </OnboardingProvider>
@@ -210,6 +230,14 @@ function RootStack() {
             headerTitle: t("settings.theme.title"),
             headerLargeTitleEnabled: true,
             headerShadowVisible: false,
+          }}
+        />
+        <Stack.Screen
+          name="settings/widget"
+          options={{
+            ...groupedHeaderBackgroundOptions,
+            headerShown: true,
+            headerTitle: t("settings.widget.title"),
           }}
         />
         <Stack.Screen

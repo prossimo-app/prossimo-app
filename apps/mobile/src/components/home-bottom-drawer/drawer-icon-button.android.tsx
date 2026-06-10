@@ -1,12 +1,13 @@
 import { useColorScheme, View } from "react-native";
 import BackIcon from "@expo/material-symbols/chevron_left.xml";
 import CloseIcon from "@expo/material-symbols/close.xml";
+import FavoriteIcon from "@expo/material-symbols/favorite.xml";
 import NewspaperIcon from "@expo/material-symbols/newspaper.xml";
 import { Host, Icon, IconButton } from "@expo/ui/jetpack-compose";
 
 import { getPrimaryIconColor } from "~/theme/native-colors";
 
-type DrawerIconButtonIcon = "back" | "close" | "news";
+type DrawerIconButtonIcon = "back" | "close" | "heart" | "heartFilled" | "news";
 
 interface DrawerIconButtonProps {
   accessibilityLabel: string;
@@ -18,6 +19,8 @@ interface DrawerIconButtonProps {
 const nativeIcons = {
   back: BackIcon,
   close: CloseIcon,
+  heart: FavoriteIcon,
+  heartFilled: FavoriteIcon,
   news: NewspaperIcon,
 } as const;
 
@@ -35,7 +38,7 @@ export function DrawerIconButton({
       <Host matchContents>
         <IconButton
           colors={{
-            contentColor: iconColor,
+            contentColor: icon === "heartFilled" ? "#ef4444" : iconColor,
           }}
           onClick={onPress}
         >

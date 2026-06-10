@@ -47,6 +47,7 @@ import type {
   Translate,
 } from "./types";
 import { SearchInput } from "~/components/search-input";
+import { useFavorites } from "~/favorites/favorites-provider";
 import { isWithinTorinoServiceArea } from "~/map/torino-bounds";
 import { getWarningForegroundColor } from "~/theme/native-colors";
 import { trpc } from "~/utils/api";
@@ -58,6 +59,13 @@ import {
   normalizeRouteColor,
 } from "./arrival-model";
 import { DrawerIconButton } from "./drawer-icon-button";
+
+// Compose clips the icon to the Host bounds on Android, so it needs a real
+// height; the SwiftUI Host on iOS draws the icon centered on a zero-height line.
+const iconHostStyle = {
+  height: Platform.OS === "android" ? 20 : 0,
+  width: 20,
+} as const;
 
 const routeTypeIcons = {
   bus: Icon.select({
@@ -290,6 +298,7 @@ export function SelectedStopDrawerContent({
           searchInputRef={searchInputRef}
           scrollBottomPadding={scrollBottomPadding}
           stopCode={stopCode}
+          stopId={stopId}
           stopName={stopName}
         />
       </Animated.View>
@@ -343,6 +352,8 @@ function ArrivalLineList({
   scrollEnabled,
   searchInputRef,
   scrollBottomPadding,
+  stopCode,
+  stopId,
   stopName,
 }: {
   alerts: ServiceAlert[];
@@ -368,9 +379,12 @@ function ArrivalLineList({
   searchInputRef: SelectedStopDrawerContentProps["searchInputRef"];
   scrollBottomPadding: number;
   stopCode: string | null;
+  stopId: string;
   stopName: string;
 }) {
   const { t } = useTranslation();
+  const { isStopFavorite, toggleFavoriteStop } = useFavorites();
+  const isFavorite = isStopFavorite(stopId);
 
   return (
     <>
@@ -397,6 +411,17 @@ function ArrivalLineList({
               />
             ) : null}
           </View>
+          <DrawerIconButton
+            accessibilityLabel={
+              isFavorite
+                ? t("home.drawer.favorites.removeStop")
+                : t("home.drawer.favorites.addStop")
+            }
+            icon={isFavorite ? "heartFilled" : "heart"}
+            onPress={() => {
+              toggleFavoriteStop({ stopCode, stopId, stopName });
+            }}
+          />
           {onStopAlertsPress ? (
             <DrawerIconButton
               accessibilityLabel={t("home.drawer.alerts.open")}
@@ -521,6 +546,8 @@ export function ArrivalLineDetail({
   userLocation?: Coordinates | null;
 }) {
   const { t } = useTranslation();
+  const { isLineFavorite, toggleFavoriteLine } = useFavorites();
+  const isFavorite = isLineFavorite(group.key);
   const routeTypeIcon = routeTypeIcons[group.routeType];
   const lineAlertsQuery = useQuery({
     ...trpc.alerts.getForRoute.queryOptions(
@@ -562,7 +589,7 @@ export function ArrivalLineDetail({
               backgroundColor: normalizeRouteColor(group.color),
             }}
           >
-            <Host style={{ height: 0, width: 20 }}>
+            <Host style={iconHostStyle}>
               <Icon
                 accessibilityLabel={t("home.drawer.arrivals.line", {
                   line: group.label,
@@ -589,6 +616,24 @@ export function ArrivalLineDetail({
               </Text>
             ) : null}
           </View>
+          <DrawerIconButton
+            accessibilityLabel={
+              isFavorite
+                ? t("home.drawer.favorites.removeLine")
+                : t("home.drawer.favorites.addLine")
+            }
+            icon={isFavorite ? "heartFilled" : "heart"}
+            onPress={() => {
+              toggleFavoriteLine({
+                color: group.color,
+                longName: null,
+                routeId: group.key,
+                shortName: group.label,
+                textColor: null,
+                type: group.routeType,
+              });
+            }}
+          />
           {lineAlerts.length > 0 ? (
             <DrawerIconButton
               accessibilityLabel={t("home.drawer.alerts.open")}
@@ -1267,7 +1312,7 @@ function ArrivalLineCard({
             backgroundColor: normalizeRouteColor(group.color),
           }}
         >
-          <Host style={{ height: 0, width: 20 }}>
+          <Host style={iconHostStyle}>
             <Icon
               accessibilityLabel={t("home.drawer.arrivals.line", {
                 line: group.label,
@@ -1286,7 +1331,7 @@ function ArrivalLineCard({
           {t("home.drawer.arrivals.line", { line: group.label })}
         </Text>
         <View className="h-9 w-5 items-center justify-center">
-          <Host style={{ height: 0, width: 20 }}>
+          <Host style={iconHostStyle}>
             <Icon color="#9ca3af" name={lineCardChevronIcon} size={18} />
           </Host>
         </View>

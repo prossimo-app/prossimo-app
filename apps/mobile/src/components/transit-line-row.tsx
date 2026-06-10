@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Platform, Pressable, Text, View } from "react-native";
 import BusIcon from "@expo/material-symbols/directions_bus.xml";
 import SubwayIcon from "@expo/material-symbols/subway.xml";
 import TrainIcon from "@expo/material-symbols/train.xml";
@@ -13,6 +13,13 @@ import { normalizeRouteColor } from "./home-bottom-drawer/arrival-model";
 
 export type TransitLine =
   RouterOutputs["transit"]["getRoutes"]["routes"][number];
+
+// Compose clips the icon to the Host bounds on Android, so it needs a real
+// height; the SwiftUI Host on iOS draws the icon centered on a zero-height line.
+const iconHostStyle = {
+  height: Platform.OS === "android" ? 20 : 0,
+  width: 20,
+} as const;
 
 const routeTypeIcons = {
   bus: Icon.select({
@@ -54,7 +61,7 @@ export function TransitLineRow({ line, onPress }: TransitLineRowProps) {
           backgroundColor: normalizeRouteColor(line.color),
         }}
       >
-        <Host style={{ height: 0, width: 20 }}>
+        <Host style={iconHostStyle}>
           <Icon
             accessibilityLabel={lineLabel}
             color="#ffffff"

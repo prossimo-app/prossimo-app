@@ -157,6 +157,17 @@
         "source": "Service alert from GTT",
         "title": "Service alert"
       },
+      "favorites": {
+        "title": "Favorites",
+        "open": "Open favorites",
+        "addStop": "Add stop to favorites",
+        "removeStop": "Remove stop from favorites",
+        "addLine": "Add line to favorites",
+        "removeLine": "Remove line from favorites",
+        "empty": "No favorites yet",
+        "emptyDescription": "Tap the heart on a stop or line to save it here.",
+        "swipeHint": "Swipe left on an item to remove it from your favorites."
+      },
       "strikeAlert": {
         "title": "Strike today",
         "description": "A transit strike is scheduled for today. Some services may be disrupted.",
@@ -264,6 +275,15 @@
       "label": "Language",
       "accessibilityLabel": "Language"
     },
+    "widget": {
+      "title": "Widget",
+      "label": "Widget stop",
+      "accessibilityLabel": "Widget stop",
+      "description": "Choose which favorite stop the Home Screen and Lock Screen widget shows.",
+      "noFavorites": "Add a stop to your favorites first, then pick it here.",
+      "none": "None",
+      "noneSelected": "No stop selected"
+    },
     "appUsage": {
       "title": "Activity tracking",
       "label": "Activity tracking",
@@ -339,6 +359,14 @@
       "resetOnboarding": "Reset onboarding",
       "resetOnboardingDescription": "Show onboarding again for this user.",
       "resetOnboardingAccessibilityLabel": "Reset onboarding"
+    }
+  },
+  "widgets": {
+    "stopArrivals": {
+      "noStopSelected": "Open Prossimo and pick a favorite stop in Settings to show arrivals here.",
+      "empty": "No incoming arrivals right now.",
+      "inlineEmpty": "No arrivals",
+      "updatedAt": "Updated {{time}}"
     }
   },
   "serverErrors": {

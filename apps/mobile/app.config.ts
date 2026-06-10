@@ -70,6 +70,35 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-localization",
     "expo-notifications",
     "expo-background-task",
+    // TODO: Debug this later
+    // [
+    //   "expo-widgets",
+    //   {
+    //     bundleIdentifier: IS_DEV
+    //       ? "app.prossimo.app.dev.widgets"
+    //       : "app.prossimo.app.widgets",
+    //     groupIdentifier: IS_DEV
+    //       ? "group.app.prossimo.app.dev"
+    //       : "group.app.prossimo.app",
+    //     widgets: [
+    //       {
+    //         // Build-time widget gallery metadata cannot go through i18next;
+    //         // English is the app's fallback language.
+    //         name: "StopArrivals",
+    //         displayName: "Stop arrivals",
+    //         description:
+    //           "Live and scheduled arrivals for one of your favorite stops.",
+    //         contentMarginsDisabled: false,
+    //         supportedFamilies: [
+    //           "systemSmall",
+    //           "systemMedium",
+    //           "accessoryRectangular",
+    //           "accessoryInline",
+    //         ],
+    //       },
+    //     ],
+    //   },
+    // ],
     [
       "expo-updates",
       {

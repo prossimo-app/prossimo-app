@@ -157,6 +157,17 @@
         "source": "Avviso di servizio da GTT",
         "title": "Avviso di servizio"
       },
+      "favorites": {
+        "title": "Preferiti",
+        "open": "Apri i preferiti",
+        "addStop": "Aggiungi la fermata ai preferiti",
+        "removeStop": "Rimuovi la fermata dai preferiti",
+        "addLine": "Aggiungi la linea ai preferiti",
+        "removeLine": "Rimuovi la linea dai preferiti",
+        "empty": "Nessun preferito",
+        "emptyDescription": "Tocca il cuore su una fermata o una linea per salvarla qui.",
+        "swipeHint": "Scorri verso sinistra su un elemento per rimuoverlo dai preferiti."
+      },
       "strikeAlert": {
         "title": "Sciopero oggi",
         "description": "Uno sciopero dei trasporti è previsto per oggi. Alcuni servizi potrebbero subire interruzioni.",
@@ -264,6 +275,15 @@
       "label": "Lingua",
       "accessibilityLabel": "Lingua"
     },
+    "widget": {
+      "title": "Widget",
+      "label": "Fermata del widget",
+      "accessibilityLabel": "Fermata del widget",
+      "description": "Scegli quale fermata preferita mostrare nel widget della schermata Home e della schermata di blocco.",
+      "noFavorites": "Aggiungi prima una fermata ai preferiti, poi selezionala qui.",
+      "none": "Nessuna",
+      "noneSelected": "Nessuna fermata selezionata"
+    },
     "appUsage": {
       "title": "Tracciamento dell'attività",
       "label": "Tracciamento dell'attività",
@@ -339,6 +359,14 @@
       "resetOnboarding": "Reimposta onboarding",
       "resetOnboardingDescription": "Mostra di nuovo l'onboarding per questo utente.",
       "resetOnboardingAccessibilityLabel": "Reimposta onboarding"
+    }
+  },
+  "widgets": {
+    "stopArrivals": {
+      "noStopSelected": "Apri Prossimo e scegli una fermata preferita nelle Impostazioni per mostrare gli arrivi qui.",
+      "empty": "Nessun arrivo in arrivo al momento.",
+      "inlineEmpty": "Nessun arrivo",
+      "updatedAt": "Aggiornato {{time}}"
     }
   },
   "serverErrors": {

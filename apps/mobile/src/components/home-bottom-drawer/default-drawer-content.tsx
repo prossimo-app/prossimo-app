@@ -29,8 +29,11 @@ import type {
 import type { SelectedStop } from "~/components/home-map";
 import type { TransitLine } from "~/components/transit-line-row";
 import { SearchInput } from "~/components/search-input";
+import { SwipeToDeleteRow } from "~/components/swipe-to-delete-row";
 import { TransitLineRow } from "~/components/transit-line-row";
+import { useFavorites } from "~/favorites/favorites-provider";
 import { getLastUpdatedDisplay } from "./arrival-model";
+import { DrawerIconButton } from "./drawer-icon-button";
 import {
   ArrivalLineDetail,
   SelectedStopDrawerContent,
@@ -38,6 +41,7 @@ import {
 
 interface DefaultDrawerContentProps extends DrawerDragHandleProps {
   currentTimeMs: number;
+  favoriteStops: DrawerNearbyStop[];
   hasMoreLines: boolean;
   hasTodayStrike: boolean;
   isLoadingMoreLines: boolean;
@@ -45,6 +49,8 @@ interface DefaultDrawerContentProps extends DrawerDragHandleProps {
   lines: TransitLine[];
   nearbyRadiusMeters: number;
   nearbyStops: DrawerNearbyStop[];
+  onFavoritesClose: () => void;
+  onFavoritesOpen: () => void;
   onLinePress: (line: TransitLine) => void;
   onSearchBlur: () => void;
   onSearchChange: (value: string) => void;
@@ -93,6 +99,7 @@ const searchStopPageSize = 10;
 
 export function DefaultDrawerContent({
   currentTimeMs,
+  favoriteStops,
   hasMoreLines,
   hasTodayStrike,
   isLoadingMoreLines,
@@ -100,6 +107,8 @@ export function DefaultDrawerContent({
   lines,
   nearbyRadiusMeters,
   nearbyStops,
+  onFavoritesClose,
+  onFavoritesOpen,
   onLinePress,
   onSearchBlur,
   onSearchChange,
@@ -129,7 +138,10 @@ export function DefaultDrawerContent({
   trackedVehicle = null,
 }: DefaultDrawerContentProps) {
   const { t } = useTranslation();
+  const { favoriteLines } = useFavorites();
   const [pageTransition] = useState(() => new Animated.Value(0));
+  const [favoritesTransition] = useState(() => new Animated.Value(0));
+  const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
   const [selectedLine, setSelectedLine] = useState<TransitLine | null>(null);
   const [selectedStop, setSelectedStop] = useState<DrawerNearbyStop | null>(
     null,
@@ -179,22 +191,90 @@ export function DefaultDrawerContent({
     },
     [pageTransition],
   );
+  const animateFavoritesTransition = useCallback(
+    (toValue: number, onComplete?: () => void) => {
+      Animated.timing(favoritesTransition, {
+        duration: 260,
+        easing: Easing.out(Easing.cubic),
+        toValue,
+        useNativeDriver: true,
+      }).start(({ finished }) => {
+        if (finished) {
+          onComplete?.();
+        }
+      });
+    },
+    [favoritesTransition],
+  );
+  const openFavorites = useCallback(() => {
+    favoritesTransition.stopAnimation();
+    setIsFavoritesOpen(true);
+    onFavoritesOpen();
+    animateFavoritesTransition(1);
+  }, [animateFavoritesTransition, favoritesTransition, onFavoritesOpen]);
+  const closeFavorites = useCallback(() => {
+    favoritesTransition.stopAnimation();
+    onFavoritesClose();
+    animateFavoritesTransition(0, () => {
+      setIsFavoritesOpen(false);
+    });
+  }, [animateFavoritesTransition, favoritesTransition, onFavoritesClose]);
+  // The list page slides away when either the favorites page or a detail page
+  // opens, so its progress is the sum of both transitions.
+  const listPageProgress = Animated.add(pageTransition, favoritesTransition);
   const listPageAnimatedStyle = {
-    opacity: pageTransition.interpolate({
+    opacity: listPageProgress.interpolate({
+      extrapolate: "clamp",
       inputRange: [0, 0.65, 1],
       outputRange: [1, 0.18, 0],
     }),
     transform: [
       {
-        translateX: pageTransition.interpolate({
+        translateX: listPageProgress.interpolate({
+          extrapolate: "clamp",
           inputRange: [0, 1],
           outputRange: [0, -40],
         }),
       },
       {
-        scale: pageTransition.interpolate({
+        scale: listPageProgress.interpolate({
+          extrapolate: "clamp",
           inputRange: [0, 1],
           outputRange: [1, 0.985],
+        }),
+      },
+    ],
+  };
+  // The favorites page slides in with its own transition and slides out like
+  // the list page when a detail page opens on top of it.
+  const favoritesPageAnimatedStyle = {
+    opacity: Animated.multiply(
+      favoritesTransition.interpolate({
+        inputRange: [0, 0.35, 1],
+        outputRange: [0, 0.35, 1],
+      }),
+      pageTransition.interpolate({
+        inputRange: [0, 0.65, 1],
+        outputRange: [1, 0.18, 0],
+      }),
+    ),
+    transform: [
+      {
+        translateX: Animated.add(
+          favoritesTransition.interpolate({
+            inputRange: [0, 1],
+            outputRange: [46, 0],
+          }),
+          pageTransition.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0, -40],
+          }),
+        ),
+      },
+      {
+        scale: favoritesTransition.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0.99, 1],
         }),
       },
     ],
@@ -234,17 +314,26 @@ export function DefaultDrawerContent({
   return (
     <View className="relative min-h-0 flex-1 overflow-hidden">
       <Animated.View
-        pointerEvents={selectedLine || selectedStop ? "none" : "auto"}
+        pointerEvents={
+          selectedLine || selectedStop || isFavoritesOpen ? "none" : "auto"
+        }
         style={[styles.page, listPageAnimatedStyle]}
       >
         <View {...panHandlers} className="gap-3">
-          <View className="gap-1">
-            <Text className="text-foreground font-sans text-2xl font-bold">
-              {t("home.drawer.searchTitle")}
-            </Text>
-            <Text className="text-muted-foreground font-sans text-sm">
-              {t("home.drawer.searchSubtitle")}
-            </Text>
+          <View className="flex-row items-center gap-3">
+            <View className="min-w-0 flex-1 gap-1">
+              <Text className="text-foreground font-sans text-2xl font-bold">
+                {t("home.drawer.searchTitle")}
+              </Text>
+              <Text className="text-muted-foreground font-sans text-sm">
+                {t("home.drawer.searchSubtitle")}
+              </Text>
+            </View>
+            <DrawerIconButton
+              accessibilityLabel={t("home.drawer.favorites.open")}
+              icon="heart"
+              onPress={openFavorites}
+            />
           </View>
           <SearchInput
             accessibilityLabel={t("home.drawer.globalSearch")}
@@ -402,6 +491,34 @@ export function DefaultDrawerContent({
         </View>
       </Animated.View>
 
+      {isFavoritesOpen ? (
+        <Animated.View
+          pointerEvents={selectedLine || selectedStop ? "none" : "auto"}
+          style={[styles.page, favoritesPageAnimatedStyle]}
+        >
+          <FavoritesPage
+            lines={favoriteLines}
+            onBack={closeFavorites}
+            onLinePress={(line) => {
+              pageTransition.stopAnimation();
+              setSelectedLine(line);
+              onLinePress(line);
+              animatePageTransition(1);
+            }}
+            onStopPress={(stop) => {
+              pageTransition.stopAnimation();
+              setSelectedStop(stop);
+              onStopPress(stop);
+              animatePageTransition(1);
+            }}
+            panHandlers={panHandlers}
+            scrollBottomPadding={scrollBottomPadding}
+            scrollEnabled={scrollEnabled}
+            stops={favoriteStops}
+          />
+        </Animated.View>
+      ) : null}
+
       {selectedLine ? (
         <Animated.View
           pointerEvents="auto"
@@ -550,6 +667,134 @@ function TodayStrikeAlert() {
         tintColor="#dc2626"
       />
     </Pressable>
+  );
+}
+
+function FavoritesPage({
+  lines,
+  onBack,
+  onLinePress,
+  onStopPress,
+  panHandlers,
+  scrollBottomPadding,
+  scrollEnabled,
+  stops,
+}: DrawerDragHandleProps & {
+  lines: TransitLine[];
+  onBack: () => void;
+  onLinePress: (line: TransitLine) => void;
+  onStopPress: (stop: DrawerNearbyStop) => void;
+  scrollBottomPadding: number;
+  stops: DrawerNearbyStop[];
+}) {
+  const { t } = useTranslation();
+  const { toggleFavoriteLine, toggleFavoriteStop } = useFavorites();
+  const hasFavorites = stops.length > 0 || lines.length > 0;
+
+  return (
+    <>
+      <View {...panHandlers} className="gap-1">
+        <View className="flex-row items-center gap-3">
+          <DrawerIconButton
+            accessibilityLabel={t("home.drawer.backAccessibilityLabel")}
+            icon="back"
+            onPress={onBack}
+          />
+          <Text
+            className="text-foreground min-w-0 flex-1 font-sans text-2xl font-bold"
+            numberOfLines={1}
+          >
+            {t("home.drawer.favorites.title")}
+          </Text>
+        </View>
+        {hasFavorites ? (
+          <Text className="text-muted-foreground px-1 font-sans text-sm">
+            {t("home.drawer.favorites.swipeHint")}
+          </Text>
+        ) : null}
+      </View>
+
+      <View
+        {...(scrollEnabled ? undefined : panHandlers)}
+        className="min-h-0 flex-1"
+      >
+        <ScrollView
+          className="min-h-0 flex-1"
+          contentContainerClassName="gap-2 px-2"
+          contentContainerStyle={{ paddingBottom: scrollBottomPadding }}
+          scrollEnabled={scrollEnabled}
+          showsVerticalScrollIndicator={false}
+        >
+          {hasFavorites ? (
+            <>
+              {stops.length > 0 ? (
+                <>
+                  <Text className="text-foreground px-1 font-sans text-base font-bold">
+                    {t("home.drawer.stops")}
+                  </Text>
+                  {stops.map((stop) => (
+                    <SwipeToDeleteRow
+                      closeAccessibilityLabel={t(
+                        "home.drawer.closeAccessibilityLabel",
+                      )}
+                      deleteAccessibilityLabel={t(
+                        "home.drawer.favorites.removeStop",
+                      )}
+                      key={stop.stopId}
+                      onDelete={() => {
+                        toggleFavoriteStop({
+                          stopCode: stop.stopCode,
+                          stopId: stop.stopId,
+                          stopName: stop.stopName,
+                        });
+                      }}
+                    >
+                      <StopRow onPress={onStopPress} stop={stop} />
+                    </SwipeToDeleteRow>
+                  ))}
+                </>
+              ) : null}
+              {lines.length > 0 ? (
+                <>
+                  <Text
+                    className={`text-foreground px-1 font-sans text-base font-bold ${
+                      stops.length > 0 ? "mt-4" : ""
+                    }`}
+                  >
+                    {t("home.drawer.lines")}
+                  </Text>
+                  {lines.map((line) => (
+                    <SwipeToDeleteRow
+                      closeAccessibilityLabel={t(
+                        "home.drawer.closeAccessibilityLabel",
+                      )}
+                      deleteAccessibilityLabel={t(
+                        "home.drawer.favorites.removeLine",
+                      )}
+                      key={line.routeId}
+                      onDelete={() => {
+                        toggleFavoriteLine(line);
+                      }}
+                    >
+                      <TransitLineRow line={line} onPress={onLinePress} />
+                    </SwipeToDeleteRow>
+                  ))}
+                </>
+              ) : null}
+            </>
+          ) : (
+            <View className="bg-card rounded-2xl px-4 py-5">
+              <Text className="text-foreground font-sans text-base font-bold">
+                {t("home.drawer.favorites.empty")}
+              </Text>
+              <Text className="text-muted-foreground mt-1 font-sans text-sm">
+                {t("home.drawer.favorites.emptyDescription")}
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      </View>
+    </>
   );
 }
 
